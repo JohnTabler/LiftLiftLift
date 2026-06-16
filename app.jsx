@@ -1,5 +1,6 @@
-// app.jsx — Root component, hash routing
+// app.jsx — Root component with hash routing + mobile bottom nav
 
+// ── GitHub Setup Modal ────────────────────────────────────────
 var SetupModal = function(props) {
   var onSave = props.onSave;
   var _1 = React.useState(localStorage.getItem('gh_token')  || ''); var token  = _1[0]; var setToken  = _1[1];
@@ -19,7 +20,7 @@ var SetupModal = function(props) {
     fetch('https://api.github.com/repos/' + owner + '/' + repo, {
       headers: { Authorization: 'Bearer ' + token },
     }).then(function(res) {
-      if (!res.ok) throw new Error('Could not reach repo. Check owner/repo name and token permissions.');
+      if (!res.ok) throw new Error('Could not reach repo. Check owner, repo name, and token scope.');
       onSave();
     }).catch(function(e) {
       setError(e.message);
@@ -34,7 +35,7 @@ var SetupModal = function(props) {
           Lift Log saves data as JSON files in your GitHub repo. Create a{' '}
           <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noreferrer"
              style={{ color: 'var(--accent)' }}>Personal Access Token</a>{' '}
-          with <strong>repo</strong> scope. Your token is stored only in your browser.
+          with <strong>repo</strong> scope. Token stays in your browser only.
         </p>
         <div className="input-group">
           <label className="label">Personal Access Token</label>
@@ -67,6 +68,7 @@ var SetupModal = function(props) {
   );
 };
 
+// ── Toast ─────────────────────────────────────────────────────
 var Toast = function(props) {
   var message = props.message; var onDone = props.onDone;
   React.useEffect(function() {
@@ -76,6 +78,82 @@ var Toast = function(props) {
   return <div className="toast">{message}</div>;
 };
 
+// ── More Drawer (mobile) ──────────────────────────────────────
+var MoreDrawer = function(props) {
+  var onNavigate  = props.onNavigate;
+  var onClose     = props.onClose;
+  var onGitHub    = props.onGitHub;
+
+  var items = [
+    { icon: '📚', label: 'Exercise Library', hash: '#/exercises'  },
+    { icon: '📋', label: 'History',          hash: '#/history'    },
+    { icon: '⚙',  label: 'GitHub Settings',  hash: null           },
+  ];
+
+  return (
+    <div className="more-drawer-overlay" onClick={function(e){ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="more-drawer">
+        <div className="more-drawer-handle" />
+        {items.map(function(item) {
+          return (
+            <button key={item.label} className="more-drawer-item"
+                    onClick={function(){
+                      if (item.hash) { onNavigate(item.hash); }
+                      else           { onGitHub(); }
+                      onClose();
+                    }}>
+              <span className="more-drawer-item-icon">{item.icon}</span>
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// ── Bottom Nav ────────────────────────────────────────────────
+var BottomNav = function(props) {
+  var route      = props.route;
+  var onNavigate = props.onNavigate;
+  var onMore     = props.onMore;
+  var moreOpen   = props.moreOpen;
+
+  var tabs = [
+    { icon: '🏠', label: 'Home',     hash: '#/'         },
+    { icon: '💪', label: 'Workout',  hash: '#/log'      },
+    { icon: '🧘', label: 'Mobility', hash: '#/mobility' },
+    { icon: '📊', label: 'Stats',    hash: '#/body-stats'},
+    { icon: '⋯',  label: 'More',     hash: null         },
+  ];
+
+  // "More" is active when on a page not in the main tabs
+  var mainHashes = ['#/', '#/log', '#/mobility', '#/body-stats'];
+  var moreActive = moreOpen || mainHashes.indexOf(route) === -1;
+
+  return (
+    <nav className="bottom-nav">
+      <div className="bottom-nav-inner">
+        {tabs.map(function(tab) {
+          var isActive = tab.hash ? route === tab.hash : moreActive;
+          return (
+            <button key={tab.label}
+                    className={'bottom-nav-btn ' + (isActive ? 'active' : '')}
+                    onClick={function(){
+                      if (tab.hash) onNavigate(tab.hash);
+                      else          onMore();
+                    }}>
+              <span className="bottom-nav-icon">{tab.icon}</span>
+              <span className="bottom-nav-label">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
+  );
+};
+
+// ── Exercises page ────────────────────────────────────────────
 var ExercisesPage = function() {
   return (
     <div>
@@ -86,17 +164,16 @@ var ExercisesPage = function() {
   );
 };
 
+// ── History page ──────────────────────────────────────────────
 var HistoryPage = function(props) {
-  var history      = props.history      || [];
-  var mobHistory   = props.mobHistory   || [];
+  var history    = props.history    || [];
+  var mobHistory = props.mobHistory || [];
 
   var _tab = React.useState('workouts'); var tab = _tab[0]; var setTab = _tab[1];
 
   return (
     <div>
       <h2 className="section-heading">History</h2>
-
-      {/* Tab switcher */}
       <div className="chip-bar" style={{ marginBottom: 20 }}>
         <button className={'chip ' + (tab === 'workouts' ? 'active' : '')}
                 onClick={function(){ setTab('workouts'); }}>
@@ -113,7 +190,7 @@ var HistoryPage = function(props) {
           <div className="empty-state">
             <div className="empty-state-icon">📋</div>
             <h3>No workouts logged yet</h3>
-            <p>Head to Log Workout to record your first session</p>
+            <p>Head to Log Workout to start</p>
           </div>
         ) : (
           <div className="history-list">
@@ -123,29 +200,23 @@ var HistoryPage = function(props) {
                   <div className="history-item-header">
                     <span className="history-item-name">{session.name || 'Workout'}</span>
                     <span className="history-item-date">
-                      {new Date(session.date).toLocaleDateString('en-US', {
-                        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-                      })}
+                      {new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
-                  {session.duration ? (
-                    <div className="text-sm text-muted mt-4">⏱ {Math.round(session.duration / 60)} min</div>
-                  ) : null}
+                  {session.duration ? <div className="text-sm text-muted mt-4">⏱ {Math.round(session.duration/60)} min</div> : null}
                   <div className="history-item-exercises mt-8">
-                    {(session.exercises || []).map(function(ex, j) {
-                      return <span key={j} className="tag tag-secondary">{ex.name}</span>;
-                    })}
+                    {(session.exercises||[]).map(function(ex,j){ return <span key={j} className="tag tag-secondary">{ex.name}</span>; })}
                   </div>
-                  {(session.exercises || []).map(function(ex, j) {
+                  {(session.exercises||[]).map(function(ex,j) {
                     return (
                       <div key={j} style={{ marginTop: 10 }}>
-                        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{ex.name}</div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                          {(ex.sets || []).map(function(set, k) {
+                        <div style={{ fontWeight:600, fontSize:13, marginBottom:4 }}>{ex.name}</div>
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                          {(ex.sets||[]).map(function(set,k) {
                             return (
-                              <span key={k} className="tag tag-equipment" style={{ fontSize: 11 }}>
-                                {set.weight ? set.weight + ' lbs × ' : ''}{set.reps} reps
-                                {set.type && set.type !== 'normal' ? ' (' + set.type + ')' : ''}
+                              <span key={k} className="tag tag-equipment" style={{ fontSize:11 }}>
+                                {set.weight ? set.weight+' lbs × ' : ''}{set.reps} reps
+                                {set.type && set.type!=='normal' ? ' ('+set.type+')' : ''}
                               </span>
                             );
                           })}
@@ -165,40 +236,38 @@ var HistoryPage = function(props) {
           <div className="empty-state">
             <div className="empty-state-icon">🧘</div>
             <h3>No mobility sessions yet</h3>
-            <p>Head to Log Mobility to record your first session</p>
+            <p>Head to Log Mobility to start</p>
           </div>
         ) : (
           <div className="history-list">
             {[...mobHistory].reverse().map(function(session, i) {
-              var completed = (session.movements || []).filter(function(m){ return m.completed; }).length;
+              var completed = (session.movements||[]).filter(function(m){ return m.completed; }).length;
               return (
                 <div key={i} className="history-item">
                   <div className="history-item-header">
                     <span className="history-item-name">{session.name || 'Mobility Session'}</span>
                     <span className="history-item-date">
-                      {new Date(session.date).toLocaleDateString('en-US', {
-                        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-                      })}
+                      {new Date(session.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                     </span>
                   </div>
                   {session.duration ? (
                     <div className="text-sm text-muted mt-4">
-                      ⏱ {Math.round(session.duration / 60)} min · {completed}/{(session.movements||[]).length} completed
+                      ⏱ {Math.round(session.duration/60)} min · {completed}/{(session.movements||[]).length} done
                     </div>
                   ) : null}
                   <div className="history-item-exercises mt-8">
-                    {(session.movements || []).map(function(m, j) {
+                    {(session.movements||[]).map(function(m,j) {
                       return (
                         <span key={j} className="tag" style={{
-                          fontSize: 11, padding: '2px 8px', borderRadius: 99,
-                          border: '1px solid ' + (m.completed ? 'var(--accent)' : 'var(--border)'),
+                          fontSize:11, padding:'2px 8px', borderRadius:99,
+                          border:'1px solid '+(m.completed ? 'var(--accent)' : 'var(--border)'),
                           color: m.completed ? 'var(--accent)' : 'var(--text-muted)',
-                          background: 'transparent',
+                          background:'transparent',
                         }}>
                           {m.name}
-                          {m.trackMode === 'hold' && m.holdSeconds ? ' · ' + m.holdSeconds + 's' : ''}
-                          {m.trackMode === 'reps' && m.reps ? ' · ' + m.reps + ' reps' : ''}
-                          {m.side && m.side !== 'both' ? ' · ' + m.side : ''}
+                          {m.trackMode==='hold'&&m.holdSeconds ? ' · '+m.holdSeconds+'s' : ''}
+                          {m.trackMode==='reps'&&m.reps ? ' · '+m.reps+' reps' : ''}
+                          {m.side&&m.side!=='both' ? ' · '+m.side : ''}
                         </span>
                       );
                     })}
@@ -217,20 +286,26 @@ var HistoryPage = function(props) {
 var App = function() {
   var _r   = React.useState(window.location.hash || '#/'); var route      = _r[0];   var setRoute      = _r[1];
   var _ss  = React.useState(false);                         var showSetup  = _ss[0];  var setShowSetup  = _ss[1];
+  var _mo  = React.useState(false);                         var moreOpen   = _mo[0];  var setMoreOpen   = _mo[1];
   var _h   = React.useState([]);                            var history    = _h[0];   var setHistory    = _h[1];
   var _mh  = React.useState([]);                            var mobHistory = _mh[0];  var setMobHistory = _mh[1];
   var _b   = React.useState([]);                            var bodyStats  = _b[0];   var setBodyStats  = _b[1];
   var _t   = React.useState(null);                          var toast      = _t[0];   var setToast      = _t[1];
   var _l   = React.useState(true);                          var loading    = _l[0];   var setLoading    = _l[1];
 
+  // Hash routing
   React.useEffect(function() {
     var onHash = function(){ setRoute(window.location.hash || '#/'); };
     window.addEventListener('hashchange', onHash);
     return function(){ window.removeEventListener('hashchange', onHash); };
   }, []);
 
-  var navigate = function(path){ window.location.hash = path; };
+  var navigate = function(path){
+    window.location.hash = path;
+    setMoreOpen(false);
+  };
 
+  // Load data
   var loadData = function() {
     GH.isConfigured().then(function(configured) {
       if (!configured) { setLoading(false); setShowSetup(true); return; }
@@ -284,7 +359,8 @@ var App = function() {
     loadData();
   };
 
-  var navItems = [
+  // Desktop top nav items
+  var desktopNavItems = [
     { label: 'Dashboard',    hash: '#/'          },
     { label: 'Log Workout',  hash: '#/log'        },
     { label: 'Log Mobility', hash: '#/mobility'   },
@@ -296,9 +372,9 @@ var App = function() {
   var renderPage = function() {
     if (loading) {
       return (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-          <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-            <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'60vh' }}>
+          <div style={{ textAlign:'center', color:'var(--text-muted)' }}>
+            <div style={{ fontSize:32, marginBottom:12 }}>⏳</div>
             <p>Loading your data…</p>
           </div>
         </div>
@@ -317,10 +393,12 @@ var App = function() {
     <div className="app-shell">
       {showSetup ? <SetupModal onSave={handleSetupSave} /> : null}
 
+      {/* Top bar — visible on desktop, logo-only on mobile */}
       <header className="topbar">
         <div className="topbar-logo">🏋️ Lift Log</div>
+        {/* Desktop nav */}
         <nav className="topbar-nav">
-          {navItems.map(function(item) {
+          {desktopNavItems.map(function(item) {
             return (
               <button key={item.hash}
                       className={'nav-btn ' + (route === item.hash ? 'active' : '')}
@@ -330,6 +408,7 @@ var App = function() {
             );
           })}
         </nav>
+        {/* Desktop GitHub button */}
         <div className="topbar-actions">
           <button className="btn btn-ghost btn-sm" onClick={function(){ setShowSetup(true); }}>
             ⚙ GitHub
@@ -337,9 +416,27 @@ var App = function() {
         </div>
       </header>
 
+      {/* Page content */}
       <main className="page-content">
         {renderPage()}
       </main>
+
+      {/* Mobile bottom nav */}
+      <BottomNav
+        route={route}
+        onNavigate={navigate}
+        onMore={function(){ setMoreOpen(true); }}
+        moreOpen={moreOpen}
+      />
+
+      {/* More drawer */}
+      {moreOpen && (
+        <MoreDrawer
+          onNavigate={navigate}
+          onClose={function(){ setMoreOpen(false); }}
+          onGitHub={function(){ setShowSetup(true); }}
+        />
+      )}
 
       {toast ? <Toast message={toast} onDone={function(){ setToast(null); }} /> : null}
     </div>
