@@ -1,9 +1,9 @@
 // components/Dashboard.jsx
+// UMD mode: Recharts is on window.Recharts
 
 const Dashboard = ({ history = [], bodyStats = [] }) => {
-  const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = Recharts;
+  const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } = window.Recharts;
 
-  // ── Derive top lifts from history ──────────────────────────
   const topLifts = React.useMemo(() => {
     const bests = {};
     history.forEach(session => {
@@ -15,22 +15,24 @@ const Dashboard = ({ history = [], bodyStats = [] }) => {
         });
       });
     });
-    return Object.entries(bests)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 6);
+    return Object.entries(bests).sort((a, b) => b[1] - a[1]).slice(0, 6);
   }, [history]);
 
-  // ── Weight chart data ──────────────────────────────────────
   const weightData = bodyStats
     .filter(s => s.weight)
     .slice(-30)
-    .map(s => ({ date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), weight: parseFloat(s.weight) }));
+    .map(s => ({
+      date:   new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      weight: parseFloat(s.weight),
+    }));
 
-  // ── Body comp chart data ───────────────────────────────────
   const compData = bodyStats
     .filter(s => s.bodyFat)
     .slice(-30)
-    .map(s => ({ date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), bf: parseFloat(s.bodyFat) }));
+    .map(s => ({
+      date: new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      bf:   parseFloat(s.bodyFat),
+    }));
 
   const latestStat = bodyStats.length ? bodyStats[bodyStats.length - 1] : null;
   const prevStat   = bodyStats.length > 1 ? bodyStats[bodyStats.length - 2] : null;
@@ -51,7 +53,7 @@ const Dashboard = ({ history = [], bodyStats = [] }) => {
     <div>
       <h2 className="section-heading">Dashboard</h2>
 
-      {/* Top stats row */}
+      {/* Top stats */}
       <div className="dashboard-grid">
         <div className="stat-card">
           <div className="stat-label">Current Weight</div>
@@ -60,7 +62,7 @@ const Dashboard = ({ history = [], bodyStats = [] }) => {
             {latestStat?.weight && <span>lbs</span>}
           </div>
           {weightChange !== null && (
-            <div className={`stat-change ${weightChange > 0 ? 'pos' : weightChange < 0 ? 'neg' : ''}`}>
+            <div className={`stat-change ${weightChange > 0 ? 'pos' : 'neg'}`}>
               {weightChange > 0 ? '▲' : '▼'} {Math.abs(weightChange)} lbs
             </div>
           )}
@@ -90,7 +92,7 @@ const Dashboard = ({ history = [], bodyStats = [] }) => {
         </div>
       </div>
 
-      {/* Charts row */}
+      {/* Charts */}
       <div className="charts-row">
         <div className="card">
           <div className="card-header">
@@ -139,17 +141,15 @@ const Dashboard = ({ history = [], bodyStats = [] }) => {
 
       {/* Top lifts */}
       {topLifts.length > 0 && (
-        <div className="card mb-16" style={{ marginBottom: 20 }}>
+        <div className="card" style={{ marginBottom: 20 }}>
           <div className="card-header">
             <span className="card-title">🏆 Top Lifts</span>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: 10 }}>
             {topLifts.map(([name, weight]) => (
               <div key={name} style={{
-                background: 'var(--surface2)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '12px 14px',
+                background: 'var(--surface2)', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '12px 14px',
               }}>
                 <div className="text-muted text-sm" style={{ marginBottom: 4 }}>{name}</div>
                 <div style={{ fontFamily: 'var(--font-display)', fontSize: 22, fontWeight: 700, color: 'var(--accent)' }}>

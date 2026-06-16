@@ -1,28 +1,28 @@
 // components/ExerciseBrowser.jsx
+// UMD mode: React is on window.React, no imports needed
 
 const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
-  const { useState, useEffect } = React;
-
   const [exercises, setExercises] = React.useState([]);
-  const [muscle, setMuscle]       = React.useState('All');
+  const [muscle,    setMuscle]    = React.useState('All');
   const [equipment, setEquipment] = React.useState('All');
-  const [search, setSearch]       = React.useState('');
+  const [search,    setSearch]    = React.useState('');
 
-  useEffect(() => {
+  React.useEffect(() => {
     fetch('data/exercises.json')
       .then(r => r.json())
       .then(setExercises)
       .catch(() => console.error('Could not load exercises.json'));
   }, []);
 
-  const muscles = ['All', ...Array.from(new Set(exercises.map(e => e.primaryMuscle))).sort()];
+  const muscles    = ['All', ...Array.from(new Set(exercises.map(e => e.primaryMuscle))).sort()];
   const equipments = ['All', ...Array.from(new Set(exercises.map(e => e.equipment))).sort()];
 
   const filtered = exercises.filter(e => {
-    const matchMuscle = muscle === 'All' || e.primaryMuscle === muscle;
-    const matchEquip  = equipment === 'All' || e.equipment === equipment;
-    const matchSearch = !search || e.name.toLowerCase().includes(search.toLowerCase()) ||
-                        e.primaryMuscle.toLowerCase().includes(search.toLowerCase());
+    const matchMuscle = muscle    === 'All' || e.primaryMuscle === muscle;
+    const matchEquip  = equipment === 'All' || e.equipment     === equipment;
+    const matchSearch = !search   ||
+      e.name.toLowerCase().includes(search.toLowerCase()) ||
+      e.primaryMuscle.toLowerCase().includes(search.toLowerCase());
     return matchMuscle && matchEquip && matchSearch;
   });
 
@@ -31,11 +31,7 @@ const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
       {/* Muscle group chips */}
       <div className="chip-bar">
         {muscles.map(m => (
-          <button
-            key={m}
-            className={`chip ${muscle === m ? 'active' : ''}`}
-            onClick={() => setMuscle(m)}
-          >
+          <button key={m} className={`chip ${muscle === m ? 'active' : ''}`} onClick={() => setMuscle(m)}>
             {m}
           </button>
         ))}
@@ -44,12 +40,8 @@ const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
       {/* Equipment chips */}
       <div className="chip-bar" style={{ marginBottom: 12 }}>
         {equipments.map(eq => (
-          <button
-            key={eq}
-            className={`chip ${equipment === eq ? 'active' : ''}`}
-            onClick={() => setEquipment(eq)}
-            style={{ fontSize: 11 }}
-          >
+          <button key={eq} className={`chip ${equipment === eq ? 'active' : ''}`}
+                  onClick={() => setEquipment(eq)} style={{ fontSize: 11 }}>
             {eq}
           </button>
         ))}
@@ -58,18 +50,14 @@ const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
       {/* Search */}
       <div className="search-bar-wrap">
         <span className="search-icon">⌕</span>
-        <input
-          className="input"
-          placeholder="Search exercises…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-        />
+        <input className="input" placeholder="Search exercises…"
+               value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {/* Count */}
       <p className="text-muted text-sm mb-12">
         {filtered.length} exercise{filtered.length !== 1 ? 's' : ''}
-        {muscle !== 'All' ? ` · ${muscle}` : ''}
+        {muscle    !== 'All' ? ` · ${muscle}`    : ''}
         {equipment !== 'All' ? ` · ${equipment}` : ''}
       </p>
 
@@ -102,13 +90,8 @@ const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
 
               {onAdd && (
                 <div className="exercise-card-footer">
-                  <span className="tag tag-secondary" style={{ fontSize: 10 }}>
-                    {ex.category}
-                  </span>
-                  <button
-                    className="btn btn-primary btn-sm"
-                    onClick={() => onAdd(ex)}
-                  >
+                  <span className="tag tag-secondary" style={{ fontSize: 10 }}>{ex.category}</span>
+                  <button className="btn btn-primary btn-sm" onClick={() => onAdd(ex)}>
                     {addLabel}
                   </button>
                 </div>
