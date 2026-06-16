@@ -1,6 +1,6 @@
 // app.jsx — Root component with hash routing + mobile bottom nav
 
-// ── Profile Picker Modal ──────────────────────────────────────
+// ── Profile Picker ────────────────────────────────────────────
 var PROFILES = ['John', 'Ariana'];
 
 var ProfilePicker = function(props) {
@@ -14,7 +14,8 @@ var ProfilePicker = function(props) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {PROFILES.map(function(name) {
             return (
-              <button key={name} className="btn btn-primary w-full" style={{ fontSize: 16, padding: '14px' }}
+              <button key={name} className="btn btn-primary w-full"
+                      style={{ fontSize: 16, padding: '14px' }}
                       onClick={function(){ onSelect(name); }}>
                 {name}
               </button>
@@ -106,19 +107,24 @@ var Toast = function(props) {
 
 // ── More Drawer (mobile) ──────────────────────────────────────
 var MoreDrawer = function(props) {
-  var onNavigate  = props.onNavigate;
-  var onClose     = props.onClose;
-  var onGitHub    = props.onGitHub;
-
-  var activeProfile = props.activeProfile;
+  var onNavigate      = props.onNavigate;
+  var onClose         = props.onClose;
+  var onGitHub        = props.onGitHub;
+  var activeProfile   = props.activeProfile;
   var onSwitchProfile = props.onSwitchProfile;
 
-  var items = [
-    { icon: '📚', label: 'Exercise Library', action: 'nav',     hash: '#/exercises' },
-    { icon: '📋', label: 'History',          action: 'nav',     hash: '#/history'   },
-    { icon: '👤', label: 'Switch Profile (' + (activeProfile === 'John' ? 'Ariana' : 'John') + ')', action: 'profile', hash: null },
-    { icon: '⚙',  label: 'GitHub Settings',  action: 'github',  hash: null          },
+  var otherProfile = activeProfile === 'John' ? 'Ariana' : 'John';
+
+  var allItems = [
+    { icon: '📚', label: 'Exercise Library',              hash: '#/exercises',          action: 'nav',     profiles: ['John'] },
+    { icon: '🧘', label: 'Mobility Library',              hash: '#/mobility-exercises', action: 'nav',     profiles: ['John', 'Ariana'] },
+    { icon: '👤', label: 'Switch to ' + otherProfile,    hash: null,                   action: 'profile', profiles: ['John', 'Ariana'] },
+    { icon: '⚙',  label: 'GitHub Settings',               hash: null,                   action: 'github',  profiles: ['John'] },
   ];
+
+  var items = allItems.filter(function(item) {
+    return item.profiles.indexOf(activeProfile) !== -1;
+  });
 
   return (
     <div className="more-drawer-overlay" onClick={function(e){ if(e.target===e.currentTarget) onClose(); }}>
@@ -128,10 +134,9 @@ var MoreDrawer = function(props) {
           return (
             <button key={item.label} className="more-drawer-item"
                     onClick={function(){
-                      if      (item.action === 'nav')     { onNavigate(item.hash); }
-                      else if (item.action === 'profile') { onSwitchProfile(); }
-                      else                                { onGitHub(); }
-                      onClose();
+                      if      (item.action === 'nav')     { onNavigate(item.hash); onClose(); }
+                      else if (item.action === 'profile') { onSwitchProfile(); onClose(); }
+                      else                                { onGitHub(); onClose(); }
                     }}>
               <span className="more-drawer-item-icon">{item.icon}</span>
               {item.label}
@@ -145,21 +150,26 @@ var MoreDrawer = function(props) {
 
 // ── Bottom Nav ────────────────────────────────────────────────
 var BottomNav = function(props) {
-  var route      = props.route;
-  var onNavigate = props.onNavigate;
-  var onMore     = props.onMore;
-  var moreOpen   = props.moreOpen;
+  var route         = props.route;
+  var onNavigate    = props.onNavigate;
+  var onMore        = props.onMore;
+  var moreOpen      = props.moreOpen;
+  var activeProfile = props.activeProfile;
 
-  var tabs = [
-    { icon: '🏠', label: 'Home',     hash: '#/'         },
-    { icon: '💪', label: 'Workout',  hash: '#/log'      },
-    { icon: '🧘', label: 'Mobility', hash: '#/mobility' },
-    { icon: '📊', label: 'Stats',    hash: '#/body-stats'},
-    { icon: '⋯',  label: 'More',     hash: null         },
+  var allTabs = [
+    { icon: '🏠', label: 'Home',     hash: '#/',           profiles: ['John'] },
+    { icon: '💪', label: 'Workout',  hash: '#/log',        profiles: ['John', 'Ariana'] },
+    { icon: '🧘', label: 'Mobility', hash: '#/mobility',   profiles: ['John', 'Ariana'] },
+    { icon: '📊', label: 'Stats',    hash: '#/body-stats', profiles: ['John'] },
+    { icon: '📋', label: 'History',  hash: '#/history',    profiles: ['Ariana'] },
+    { icon: '⋯',  label: 'More',     hash: null,           profiles: ['John', 'Ariana'] },
   ];
 
-  // "More" is active when on a page not in the main tabs
-  var mainHashes = ['#/', '#/log', '#/mobility', '#/body-stats'];
+  var tabs = allTabs.filter(function(t) {
+    return t.profiles.indexOf(activeProfile) !== -1;
+  });
+
+  var mainHashes = tabs.filter(function(t){ return t.hash; }).map(function(t){ return t.hash; });
   var moreActive = moreOpen || mainHashes.indexOf(route) === -1;
 
   return (
@@ -195,12 +205,267 @@ var ExercisesPage = function() {
   );
 };
 
+// ── Mobility Library page ─────────────────────────────────────
+var MobilityLibraryPage = function() {
+  return (
+    <div>
+      <h2 className="section-heading">Mobility Library</h2>
+      <p className="section-sub">Browse mobility exercises by body part</p>
+      <MobilityBrowser />
+    </div>
+  );
+};
+
+// ── Edit Workout Modal ────────────────────────────────────────
+var EditWorkoutModal = function(props) {
+  var session  = props.session;
+  var onSave   = props.onSave;
+  var onDelete = props.onDelete;
+  var onClose  = props.onClose;
+
+  var _name = React.useState(session.name || '');
+  var editName = _name[0]; var setEditName = _name[1];
+
+  var _date = React.useState(session.date ? session.date.slice(0, 10) : '');
+  var editDate = _date[0]; var setEditDate = _date[1];
+
+  var _exs = React.useState(JSON.parse(JSON.stringify(session.exercises || [])));
+  var editExs = _exs[0]; var setEditExs = _exs[1];
+
+  var _conf = React.useState(false);
+  var confirmDelete = _conf[0]; var setConfirmDelete = _conf[1];
+
+  var updateSet = function(exIdx, setIdx, field, value) {
+    var next = editExs.map(function(ex, ei) {
+      if (ei !== exIdx) return ex;
+      return Object.assign({}, ex, {
+        sets: ex.sets.map(function(s, si) {
+          if (si !== setIdx) return s;
+          return Object.assign({}, s, { [field]: value });
+        })
+      });
+    });
+    setEditExs(next);
+  };
+
+  var handleSave = function() {
+    var updated = Object.assign({}, session, {
+      name: editName,
+      date: editDate ? new Date(editDate).toISOString() : session.date,
+      exercises: editExs,
+    });
+    onSave(updated);
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={function(e){ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal" style={{ maxWidth: 520, maxHeight: '85vh', overflowY: 'auto' }}>
+        <div className="modal-title">Edit Workout</div>
+
+        <div className="input-group">
+          <label className="label">Session Name</label>
+          <input className="input" value={editName}
+                 onChange={function(e){ setEditName(e.target.value); }} />
+        </div>
+        <div className="input-group">
+          <label className="label">Date</label>
+          <input className="input" type="date" value={editDate}
+                 onChange={function(e){ setEditDate(e.target.value); }} />
+        </div>
+
+        {editExs.map(function(ex, ei) {
+          return (
+            <div key={ei} style={{ marginBottom: 16, padding: 12, background: 'var(--surface2)', borderRadius: 10 }}>
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>{ex.name}</div>
+              {(ex.sets || []).map(function(set, si) {
+                return (
+                  <div key={si} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)', minWidth: 40 }}>Set {si + 1}</span>
+                    <input className="input" style={{ flex: 1 }} type="number" placeholder="lbs"
+                           value={set.weight || ''}
+                           onChange={function(e){ updateSet(ei, si, 'weight', e.target.value); }} />
+                    <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>×</span>
+                    <input className="input" style={{ flex: 1 }} type="number" placeholder="reps"
+                           value={set.reps || ''}
+                           onChange={function(e){ updateSet(ei, si, 'reps', e.target.value); }} />
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSave}>Save Changes</button>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        </div>
+
+        <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+          {!confirmDelete ? (
+            <button className="btn w-full" style={{ background: 'var(--danger)', color: '#fff' }}
+                    onClick={function(){ setConfirmDelete(true); }}>
+              🗑 Delete Session
+            </button>
+          ) : (
+            <div>
+              <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>Are you sure? This cannot be undone.</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn w-full" style={{ background: 'var(--danger)', color: '#fff' }}
+                        onClick={function(){ onDelete(); onClose(); }}>
+                  Yes, Delete
+                </button>
+                <button className="btn btn-ghost w-full" onClick={function(){ setConfirmDelete(false); }}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ── Edit Mobility Modal ───────────────────────────────────────
+var EditMobilityModal = function(props) {
+  var session  = props.session;
+  var onSave   = props.onSave;
+  var onDelete = props.onDelete;
+  var onClose  = props.onClose;
+
+  var _name = React.useState(session.name || 'Mobility Session');
+  var editName = _name[0]; var setEditName = _name[1];
+
+  var _date = React.useState(session.date ? session.date.slice(0, 10) : '');
+  var editDate = _date[0]; var setEditDate = _date[1];
+
+  var _movs = React.useState(JSON.parse(JSON.stringify(session.movements || [])));
+  var editMovs = _movs[0]; var setEditMovs = _movs[1];
+
+  var _conf = React.useState(false);
+  var confirmDelete = _conf[0]; var setConfirmDelete = _conf[1];
+
+  var updateMovement = function(idx, field, value) {
+    var next = editMovs.map(function(m, i) {
+      if (i !== idx) return m;
+      return Object.assign({}, m, { [field]: value });
+    });
+    setEditMovs(next);
+  };
+
+  var handleSave = function() {
+    var updated = Object.assign({}, session, {
+      name: editName,
+      date: editDate ? new Date(editDate).toISOString() : session.date,
+      movements: editMovs,
+    });
+    onSave(updated);
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay" onClick={function(e){ if(e.target===e.currentTarget) onClose(); }}>
+      <div className="modal" style={{ maxWidth: 520, maxHeight: '85vh', overflowY: 'auto' }}>
+        <div className="modal-title">Edit Mobility Session</div>
+
+        <div className="input-group">
+          <label className="label">Session Name</label>
+          <input className="input" value={editName}
+                 onChange={function(e){ setEditName(e.target.value); }} />
+        </div>
+        <div className="input-group">
+          <label className="label">Date</label>
+          <input className="input" type="date" value={editDate}
+                 onChange={function(e){ setEditDate(e.target.value); }} />
+        </div>
+
+        {editMovs.map(function(m, i) {
+          return (
+            <div key={i} style={{ marginBottom: 12, padding: 12, background: 'var(--surface2)', borderRadius: 10 }}>
+              <div style={{ fontWeight: 700, marginBottom: 8 }}>{m.name}</div>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                {(m.trackMode === 'hold' || m.holdSeconds) ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <label className="label" style={{ margin: 0 }}>Hold (s)</label>
+                    <input className="input" style={{ width: 70 }} type="number"
+                           value={m.holdSeconds || ''}
+                           onChange={function(e){ updateMovement(i, 'holdSeconds', e.target.value); }} />
+                  </div>
+                ) : null}
+                {(m.trackMode === 'reps' || m.reps) ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <label className="label" style={{ margin: 0 }}>Reps</label>
+                    <input className="input" style={{ width: 70 }} type="number"
+                           value={m.reps || ''}
+                           onChange={function(e){ updateMovement(i, 'reps', e.target.value); }} />
+                  </div>
+                ) : null}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <label className="label" style={{ margin: 0 }}>Done</label>
+                  <input type="checkbox" checked={!!m.completed}
+                         onChange={function(e){ updateMovement(i, 'completed', e.target.checked); }} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+
+        <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+          <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleSave}>Save Changes</button>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+        </div>
+
+        <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+          {!confirmDelete ? (
+            <button className="btn w-full" style={{ background: 'var(--danger)', color: '#fff' }}
+                    onClick={function(){ setConfirmDelete(true); }}>
+              🗑 Delete Session
+            </button>
+          ) : (
+            <div>
+              <p style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 8 }}>Are you sure? This cannot be undone.</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button className="btn w-full" style={{ background: 'var(--danger)', color: '#fff' }}
+                        onClick={function(){ onDelete(); onClose(); }}>
+                  Yes, Delete
+                </button>
+                <button className="btn btn-ghost w-full" onClick={function(){ setConfirmDelete(false); }}>Cancel</button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── History page ──────────────────────────────────────────────
 var HistoryPage = function(props) {
-  var history    = props.history    || [];
-  var mobHistory = props.mobHistory || [];
+  var history            = props.history            || [];
+  var mobHistory         = props.mobHistory         || [];
+  var onUpdateHistory    = props.onUpdateHistory;
+  var onUpdateMobHistory = props.onUpdateMobHistory;
+  var defaultTab         = props.defaultTab         || 'workouts';
 
-  var _tab = React.useState('workouts'); var tab = _tab[0]; var setTab = _tab[1];
+  var _tab   = React.useState(defaultTab); var tab = _tab[0]; var setTab = _tab[1];
+  var _editW = React.useState(null); var editingWorkout  = _editW[0]; var setEditingWorkout  = _editW[1];
+  var _editM = React.useState(null); var editingMobility = _editM[0]; var setEditingMobility = _editM[1];
+
+  var handleSaveWorkout = function(realIdx, updated) {
+    var next = history.map(function(s, i){ return i === realIdx ? updated : s; });
+    onUpdateHistory(next);
+  };
+  var handleDeleteWorkout = function(realIdx) {
+    var next = history.filter(function(_, i){ return i !== realIdx; });
+    onUpdateHistory(next);
+  };
+  var handleSaveMobility = function(realIdx, updated) {
+    var next = mobHistory.map(function(s, i){ return i === realIdx ? updated : s; });
+    onUpdateMobHistory(next);
+  };
+  var handleDeleteMobility = function(realIdx) {
+    var next = mobHistory.filter(function(_, i){ return i !== realIdx; });
+    onUpdateMobHistory(next);
+  };
 
   return (
     <div>
@@ -216,6 +481,23 @@ var HistoryPage = function(props) {
         </button>
       </div>
 
+      {editingWorkout !== null && (
+        <EditWorkoutModal
+          session={history[editingWorkout]}
+          onSave={function(updated){ handleSaveWorkout(editingWorkout, updated); }}
+          onDelete={function(){ handleDeleteWorkout(editingWorkout); }}
+          onClose={function(){ setEditingWorkout(null); }}
+        />
+      )}
+      {editingMobility !== null && (
+        <EditMobilityModal
+          session={mobHistory[editingMobility]}
+          onSave={function(updated){ handleSaveMobility(editingMobility, updated); }}
+          onDelete={function(){ handleDeleteMobility(editingMobility); }}
+          onClose={function(){ setEditingMobility(null); }}
+        />
+      )}
+
       {tab === 'workouts' && (
         history.length === 0 ? (
           <div className="empty-state">
@@ -226,6 +508,7 @@ var HistoryPage = function(props) {
         ) : (
           <div className="history-list">
             {[...history].reverse().map(function(session, i) {
+              var realIdx = history.length - 1 - i;
               return (
                 <div key={i} className="history-item">
                   <div className="history-item-header">
@@ -255,6 +538,10 @@ var HistoryPage = function(props) {
                       </div>
                     );
                   })}
+                  <button className="btn btn-ghost btn-sm" style={{ marginTop: 10, fontSize: 12 }}
+                          onClick={function(){ setEditingWorkout(realIdx); }}>
+                    ✏ Edit / Delete
+                  </button>
                 </div>
               );
             })}
@@ -272,6 +559,7 @@ var HistoryPage = function(props) {
         ) : (
           <div className="history-list">
             {[...mobHistory].reverse().map(function(session, i) {
+              var realIdx = mobHistory.length - 1 - i;
               var completed = (session.movements||[]).filter(function(m){ return m.completed; }).length;
               return (
                 <div key={i} className="history-item">
@@ -303,6 +591,10 @@ var HistoryPage = function(props) {
                       );
                     })}
                   </div>
+                  <button className="btn btn-ghost btn-sm" style={{ marginTop: 10, fontSize: 12 }}
+                          onClick={function(){ setEditingMobility(realIdx); }}>
+                    ✏ Edit / Delete
+                  </button>
                 </div>
               );
             })}
@@ -324,7 +616,7 @@ var App = function() {
   var _t   = React.useState(null);                          var toast      = _t[0];   var setToast      = _t[1];
   var _l   = React.useState(true);                          var loading    = _l[0];   var setLoading    = _l[1];
   var _pr  = React.useState(localStorage.getItem('gh_profile') || null); var activeProfile = _pr[0]; var setActiveProfile = _pr[1];
-  var _sp  = React.useState(false);                         var showProfilePicker = _sp[0]; var setShowProfilePicker = _sp[1];
+  var _sp  = React.useState(!localStorage.getItem('gh_profile')); var showProfilePicker = _sp[0]; var setShowProfilePicker = _sp[1];
 
   // Hash routing
   React.useEffect(function() {
@@ -342,6 +634,7 @@ var App = function() {
     localStorage.setItem('gh_profile', name);
     setActiveProfile(name);
     setShowProfilePicker(false);
+    setHistory([]); setMobHistory([]); setBodyStats([]);
     setLoading(true);
     loadData();
   };
@@ -401,21 +694,39 @@ var App = function() {
       .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
   };
 
+  var updateHistory = function(updated) {
+    setHistory(updated);
+    return GH.writeFile('data/history.json', updated, 'Edit workout history')
+      .then(function(){ showToast('History updated ✓'); })
+      .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
+  };
+
+  var updateMobHistory = function(updated) {
+    setMobHistory(updated);
+    return GH.writeFile('data/mobility_history.json', updated, 'Edit mobility history')
+      .then(function(){ showToast('History updated ✓'); })
+      .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
+  };
+
   var handleSetupSave = function() {
     setShowSetup(false);
     setLoading(true);
     loadData();
   };
 
-  // Desktop top nav items
-  var desktopNavItems = [
-    { label: 'Dashboard',    hash: '#/'          },
-    { label: 'Log Workout',  hash: '#/log'        },
-    { label: 'Log Mobility', hash: '#/mobility'   },
-    { label: 'Exercises',    hash: '#/exercises'  },
-    { label: 'Body Stats',   hash: '#/body-stats' },
-    { label: 'History',      hash: '#/history'    },
+  // Desktop top nav — profile-aware
+  var allDesktopNavItems = [
+    { label: 'Dashboard',    hash: '#/',                   profiles: ['John'] },
+    { label: 'Log Workout',  hash: '#/log',                profiles: ['John', 'Ariana'] },
+    { label: 'Log Mobility', hash: '#/mobility',           profiles: ['John', 'Ariana'] },
+    { label: 'Exercises',    hash: '#/exercises',          profiles: ['John'] },
+    { label: 'Body Stats',   hash: '#/body-stats',         profiles: ['John'] },
+    { label: 'History',      hash: '#/history',            profiles: ['John', 'Ariana'] },
   ];
+
+  var desktopNavItems = allDesktopNavItems.filter(function(item) {
+    return !activeProfile || item.profiles.indexOf(activeProfile) !== -1;
+  });
 
   var renderPage = function() {
     if (loading) {
@@ -428,13 +739,30 @@ var App = function() {
         </div>
       );
     }
-    if (route === '#/' || route === '')  return <Dashboard     history={history} bodyStats={bodyStats} />;
-    if (route === '#/log')               return <WorkoutLogger  onSave={saveWorkout} />;
-    if (route === '#/mobility')          return <MobilityLogger onSave={saveMobility} />;
-    if (route === '#/exercises')         return <ExercisesPage />;
-    if (route === '#/body-stats')        return <BodyStats      stats={bodyStats} onSave={saveBodyStat} />;
-    if (route === '#/history')           return <HistoryPage    history={history} mobHistory={mobHistory} />;
-    return <Dashboard history={history} bodyStats={bodyStats} />;
+
+    var isAriana = activeProfile === 'Ariana';
+
+    // Ariana: redirect blocked pages to history
+    if (isAriana && (route === '#/' || route === '' || route === '#/body-stats' || route === '#/exercises')) {
+      return <HistoryPage history={history} mobHistory={mobHistory}
+               onUpdateHistory={updateHistory} onUpdateMobHistory={updateMobHistory}
+               defaultTab="workouts" />;
+    }
+
+    if (route === '#/' || route === '')       return <Dashboard     history={history} bodyStats={bodyStats} />;
+    if (route === '#/log')                    return <WorkoutLogger  onSave={saveWorkout} />;
+    if (route === '#/mobility')               return <MobilityLogger onSave={saveMobility} />;
+    if (route === '#/exercises')              return <ExercisesPage />;
+    if (route === '#/mobility-exercises')     return <MobilityLibraryPage />;
+    if (route === '#/body-stats')             return <BodyStats      stats={bodyStats} onSave={saveBodyStat} />;
+    if (route === '#/history')                return <HistoryPage    history={history} mobHistory={mobHistory}
+                                                       onUpdateHistory={updateHistory} onUpdateMobHistory={updateMobHistory}
+                                                       defaultTab="workouts" />;
+
+    return isAriana
+      ? <HistoryPage history={history} mobHistory={mobHistory}
+          onUpdateHistory={updateHistory} onUpdateMobHistory={updateMobHistory} defaultTab="workouts" />
+      : <Dashboard history={history} bodyStats={bodyStats} />;
   };
 
   return (
@@ -460,8 +788,8 @@ var App = function() {
         {/* Desktop actions */}
         <div className="topbar-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
           {activeProfile && (
-            <button className="btn btn-ghost btn-sm" onClick={function(){ setShowProfilePicker(true); }}
-                    style={{ fontWeight: 700 }}>
+            <button className="btn btn-ghost btn-sm" style={{ fontWeight: 700 }}
+                    onClick={function(){ setShowProfilePicker(true); }}>
               👤 {activeProfile}
             </button>
           )}
@@ -482,6 +810,7 @@ var App = function() {
         onNavigate={navigate}
         onMore={function(){ setMoreOpen(true); }}
         moreOpen={moreOpen}
+        activeProfile={activeProfile || 'John'}
       />
 
       {/* More drawer */}
@@ -490,7 +819,7 @@ var App = function() {
           onNavigate={navigate}
           onClose={function(){ setMoreOpen(false); }}
           onGitHub={function(){ setShowSetup(true); }}
-          activeProfile={activeProfile}
+          activeProfile={activeProfile || 'John'}
           onSwitchProfile={switchProfile}
         />
       )}
