@@ -22,13 +22,19 @@ window.GH = (() => {
     return localStorage.getItem('gh_profile') || 'John';
   }
 
+  function profiledPath(filePath) {
+    if (filePath.startsWith('data/')) {
+      return 'data/' + getActiveProfile() + '/' + filePath.slice(5);
+    }
+    return filePath;
+  }
+
   async function readFile(filePath) {
     const { token, owner, repo, branch } = getConfig();
     if (!token) throw new Error('No GitHub token configured');
-    var profile = getActiveProfile();
-    var profiledPath = filePath.startsWith('data/') ? 'data/' + profile + '/' + filePath.slice(5) : filePath;
+    var pPath = profiledPath(filePath);
     const res = await fetch(
-      `${base(owner, repo)}/${profiledPath}?ref=${branch}`,
+      `${base(owner, repo)}/${pPath}?ref=${branch}`,
       { headers: headers(token) }
     );
     if (res.status === 404) return null; // file doesn't exist yet
@@ -43,6 +49,7 @@ window.GH = (() => {
   async function writeFile(filePath, data, commitMsg) {
     const { token, owner, repo, branch } = getConfig();
     if (!token) throw new Error('No GitHub token configured');
+    var pPath = profiledPath(filePath);
 
     // Get current SHA if file exists (needed for update)
     let sha;
@@ -51,17 +58,15 @@ window.GH = (() => {
       if (existing) sha = existing.sha;
     } catch (_) {}
 
-    var profile = getActiveProfile();
-    var profiledPath = filePath.startsWith('data/') ? 'data/' + profile + '/' + filePath.slice(5) : filePath;
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
     const body = {
-      message: commitMsg || `Update ${profiledPath}`,
+      message: commitMsg || `Update ${pPath}`,
       content,
       branch,
       ...(sha ? { sha } : {}),
     };
 
-    const res = await fetch(`${base(owner, repo)}/${profiledPath}`, {
+    const res = await fetch(`${base(owner, repo)}/${pPath}`, {
       method: 'PUT',
       headers: headers(token),
       body: JSON.stringify(body),
