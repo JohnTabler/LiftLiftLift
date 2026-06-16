@@ -1,4 +1,4 @@
-// app.jsx — Root component, hash routing, no imports
+// app.jsx — Root component, hash routing
 
 // ── GitHub Setup Modal ────────────────────────────────────────
 var SetupModal = function(props) {
@@ -40,13 +40,11 @@ var SetupModal = function(props) {
              style={{ color: 'var(--accent)' }}>Personal Access Token</a>{' '}
           with <strong>repo</strong> scope. Your token is stored only in your browser.
         </p>
-
         <div className="input-group">
           <label className="label">Personal Access Token</label>
           <input className="input" type="password" placeholder="ghp_xxxxxxxxxxxx"
                  value={token} onChange={function(e){ setToken(e.target.value); }} />
         </div>
-
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="input-group">
             <label className="label">GitHub Username</label>
@@ -59,15 +57,12 @@ var SetupModal = function(props) {
                    value={repo} onChange={function(e){ setRepo(e.target.value); }} />
           </div>
         </div>
-
         <div className="input-group">
           <label className="label">Branch</label>
           <input className="input" placeholder="main"
                  value={branch} onChange={function(e){ setBranch(e.target.value); }} />
         </div>
-
         {error ? <p style={{ color: 'var(--danger)', fontSize: 13 }}>⚠ {error}</p> : null}
-
         <button className="btn btn-primary w-full" onClick={handleSave} disabled={testing}>
           {testing ? 'Testing connection…' : 'Save & Connect'}
         </button>
@@ -107,7 +102,7 @@ var HistoryPage = function(props) {
         <div className="empty-state">
           <div className="empty-state-icon">📋</div>
           <h3>No workouts logged yet</h3>
-          <p>Complete a workout session to see it here</p>
+          <p>Head to Log Workout to record your first session</p>
         </div>
       ) : (
         <div className="history-list">
@@ -167,7 +162,6 @@ var App = function() {
   var _t  = React.useState(null);                          var toast     = _t[0];  var setToast     = _t[1];
   var _l  = React.useState(true);                          var loading   = _l[0];  var setLoading   = _l[1];
 
-  // Hash routing
   React.useEffect(function() {
     var onHash = function(){ setRoute(window.location.hash || '#/'); };
     window.addEventListener('hashchange', onHash);
@@ -176,7 +170,6 @@ var App = function() {
 
   var navigate = function(path){ window.location.hash = path; };
 
-  // Load data
   var loadData = function() {
     GH.isConfigured().then(function(configured) {
       if (!configured) { setLoading(false); setShowSetup(true); return; }
@@ -198,6 +191,14 @@ var App = function() {
 
   var showToast = function(msg){ setToast(msg); };
 
+  var saveWorkout = function(session) {
+    var updated = history.concat([session]);
+    setHistory(updated);
+    return GH.writeFile('data/history.json', updated, 'Log workout: ' + session.name)
+      .then(function(){ showToast('Workout saved ✓'); })
+      .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
+  };
+
   var saveBodyStat = function(entry) {
     var updated = bodyStats.concat([entry]);
     setBodyStats(updated);
@@ -213,10 +214,11 @@ var App = function() {
   };
 
   var navItems = [
-    { label: 'Dashboard',  hash: '#/'          },
-    { label: 'Exercises',  hash: '#/exercises'  },
-    { label: 'Body Stats', hash: '#/body-stats' },
-    { label: 'History',    hash: '#/history'    },
+    { label: 'Dashboard',    hash: '#/'         },
+    { label: 'Log Workout',  hash: '#/log'       },
+    { label: 'Exercises',    hash: '#/exercises' },
+    { label: 'Body Stats',   hash: '#/body-stats'},
+    { label: 'History',      hash: '#/history'   },
   ];
 
   var renderPage = function() {
@@ -230,10 +232,11 @@ var App = function() {
         </div>
       );
     }
-    if (route === '#/' || route === '')   return <Dashboard  history={history} bodyStats={bodyStats} />;
-    if (route === '#/exercises')          return <ExercisesPage />;
-    if (route === '#/body-stats')         return <BodyStats  stats={bodyStats} onSave={saveBodyStat} />;
-    if (route === '#/history')            return <HistoryPage history={history} />;
+    if (route === '#/' || route === '')    return <Dashboard    history={history} bodyStats={bodyStats} />;
+    if (route === '#/log')                 return <WorkoutLogger onSave={saveWorkout} />;
+    if (route === '#/exercises')           return <ExercisesPage />;
+    if (route === '#/body-stats')          return <BodyStats    stats={bodyStats} onSave={saveBodyStat} />;
+    if (route === '#/history')             return <HistoryPage  history={history} />;
     return <Dashboard history={history} bodyStats={bodyStats} />;
   };
 
@@ -255,8 +258,7 @@ var App = function() {
           })}
         </nav>
         <div className="topbar-actions">
-          <button className="btn btn-ghost btn-sm"
-                  onClick={function(){ setShowSetup(true); }}>
+          <button className="btn btn-ghost btn-sm" onClick={function(){ setShowSetup(true); }}>
             ⚙ GitHub
           </button>
         </div>
@@ -271,7 +273,6 @@ var App = function() {
   );
 };
 
-// Mount
-var rootEl = document.getElementById('root');
+var rootEl  = document.getElementById('root');
 var appRoot = ReactDOM.createRoot(rootEl);
 appRoot.render(React.createElement(App, null));
