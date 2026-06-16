@@ -1,9 +1,7 @@
 // app.jsx — Root component, hash routing
 
-// ── GitHub Setup Modal ────────────────────────────────────────
 var SetupModal = function(props) {
   var onSave = props.onSave;
-
   var _1 = React.useState(localStorage.getItem('gh_token')  || ''); var token  = _1[0]; var setToken  = _1[1];
   var _2 = React.useState(localStorage.getItem('gh_owner')  || ''); var owner  = _2[0]; var setOwner  = _2[1];
   var _3 = React.useState(localStorage.getItem('gh_repo')   || ''); var repo   = _3[0]; var setRepo   = _3[1];
@@ -25,9 +23,7 @@ var SetupModal = function(props) {
       onSave();
     }).catch(function(e) {
       setError(e.message);
-    }).finally(function() {
-      setTesting(false);
-    });
+    }).finally(function() { setTesting(false); });
   };
 
   return (
@@ -71,7 +67,6 @@ var SetupModal = function(props) {
   );
 };
 
-// ── Toast ─────────────────────────────────────────────────────
 var Toast = function(props) {
   var message = props.message; var onDone = props.onDone;
   React.useEffect(function() {
@@ -81,7 +76,6 @@ var Toast = function(props) {
   return <div className="toast">{message}</div>;
 };
 
-// ── Exercises Page ────────────────────────────────────────────
 var ExercisesPage = function() {
   return (
     <div>
@@ -92,62 +86,128 @@ var ExercisesPage = function() {
   );
 };
 
-// ── History Page ──────────────────────────────────────────────
 var HistoryPage = function(props) {
-  var history = props.history || [];
+  var history      = props.history      || [];
+  var mobHistory   = props.mobHistory   || [];
+
+  var _tab = React.useState('workouts'); var tab = _tab[0]; var setTab = _tab[1];
+
   return (
     <div>
-      <h2 className="section-heading">Workout History</h2>
-      {history.length === 0 ? (
-        <div className="empty-state">
-          <div className="empty-state-icon">📋</div>
-          <h3>No workouts logged yet</h3>
-          <p>Head to Log Workout to record your first session</p>
-        </div>
-      ) : (
-        <div className="history-list">
-          {[...history].reverse().map(function(session, i) {
-            return (
-              <div key={i} className="history-item">
-                <div className="history-item-header">
-                  <span className="history-item-name">{session.name || 'Workout'}</span>
-                  <span className="history-item-date">
-                    {new Date(session.date).toLocaleDateString('en-US', {
-                      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-                    })}
-                  </span>
-                </div>
-                {session.duration ? (
-                  <div className="text-sm text-muted mt-4">
-                    ⏱ {Math.round(session.duration / 60)} min
+      <h2 className="section-heading">History</h2>
+
+      {/* Tab switcher */}
+      <div className="chip-bar" style={{ marginBottom: 20 }}>
+        <button className={'chip ' + (tab === 'workouts' ? 'active' : '')}
+                onClick={function(){ setTab('workouts'); }}>
+          💪 Workouts ({history.length})
+        </button>
+        <button className={'chip ' + (tab === 'mobility' ? 'active' : '')}
+                onClick={function(){ setTab('mobility'); }}>
+          🧘 Mobility ({mobHistory.length})
+        </button>
+      </div>
+
+      {tab === 'workouts' && (
+        history.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">📋</div>
+            <h3>No workouts logged yet</h3>
+            <p>Head to Log Workout to record your first session</p>
+          </div>
+        ) : (
+          <div className="history-list">
+            {[...history].reverse().map(function(session, i) {
+              return (
+                <div key={i} className="history-item">
+                  <div className="history-item-header">
+                    <span className="history-item-name">{session.name || 'Workout'}</span>
+                    <span className="history-item-date">
+                      {new Date(session.date).toLocaleDateString('en-US', {
+                        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+                      })}
+                    </span>
                   </div>
-                ) : null}
-                <div className="history-item-exercises mt-8">
+                  {session.duration ? (
+                    <div className="text-sm text-muted mt-4">⏱ {Math.round(session.duration / 60)} min</div>
+                  ) : null}
+                  <div className="history-item-exercises mt-8">
+                    {(session.exercises || []).map(function(ex, j) {
+                      return <span key={j} className="tag tag-secondary">{ex.name}</span>;
+                    })}
+                  </div>
                   {(session.exercises || []).map(function(ex, j) {
-                    return <span key={j} className="tag tag-secondary">{ex.name}</span>;
+                    return (
+                      <div key={j} style={{ marginTop: 10 }}>
+                        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{ex.name}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                          {(ex.sets || []).map(function(set, k) {
+                            return (
+                              <span key={k} className="tag tag-equipment" style={{ fontSize: 11 }}>
+                                {set.weight ? set.weight + ' lbs × ' : ''}{set.reps} reps
+                                {set.type && set.type !== 'normal' ? ' (' + set.type + ')' : ''}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
                   })}
                 </div>
-                {(session.exercises || []).map(function(ex, j) {
-                  return (
-                    <div key={j} style={{ marginTop: 10 }}>
-                      <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{ex.name}</div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {(ex.sets || []).map(function(set, k) {
-                          return (
-                            <span key={k} className="tag tag-equipment" style={{ fontSize: 11 }}>
-                              {set.weight ? set.weight + ' lbs × ' : ''}{set.reps} reps
-                              {set.type && set.type !== 'normal' ? ' (' + set.type + ')' : ''}
-                            </span>
-                          );
-                        })}
-                      </div>
+              );
+            })}
+          </div>
+        )
+      )}
+
+      {tab === 'mobility' && (
+        mobHistory.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-state-icon">🧘</div>
+            <h3>No mobility sessions yet</h3>
+            <p>Head to Log Mobility to record your first session</p>
+          </div>
+        ) : (
+          <div className="history-list">
+            {[...mobHistory].reverse().map(function(session, i) {
+              var completed = (session.movements || []).filter(function(m){ return m.completed; }).length;
+              return (
+                <div key={i} className="history-item">
+                  <div className="history-item-header">
+                    <span className="history-item-name">{session.name || 'Mobility Session'}</span>
+                    <span className="history-item-date">
+                      {new Date(session.date).toLocaleDateString('en-US', {
+                        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  {session.duration ? (
+                    <div className="text-sm text-muted mt-4">
+                      ⏱ {Math.round(session.duration / 60)} min · {completed}/{(session.movements||[]).length} completed
                     </div>
-                  );
-                })}
-              </div>
-            );
-          })}
-        </div>
+                  ) : null}
+                  <div className="history-item-exercises mt-8">
+                    {(session.movements || []).map(function(m, j) {
+                      return (
+                        <span key={j} className="tag" style={{
+                          fontSize: 11, padding: '2px 8px', borderRadius: 99,
+                          border: '1px solid ' + (m.completed ? 'var(--accent)' : 'var(--border)'),
+                          color: m.completed ? 'var(--accent)' : 'var(--text-muted)',
+                          background: 'transparent',
+                        }}>
+                          {m.name}
+                          {m.trackMode === 'hold' && m.holdSeconds ? ' · ' + m.holdSeconds + 's' : ''}
+                          {m.trackMode === 'reps' && m.reps ? ' · ' + m.reps + ' reps' : ''}
+                          {m.side && m.side !== 'both' ? ' · ' + m.side : ''}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )
       )}
     </div>
   );
@@ -155,12 +215,13 @@ var HistoryPage = function(props) {
 
 // ── Root App ──────────────────────────────────────────────────
 var App = function() {
-  var _r  = React.useState(window.location.hash || '#/'); var route     = _r[0];  var setRoute     = _r[1];
-  var _ss = React.useState(false);                         var showSetup = _ss[0]; var setShowSetup = _ss[1];
-  var _h  = React.useState([]);                            var history   = _h[0];  var setHistory   = _h[1];
-  var _b  = React.useState([]);                            var bodyStats = _b[0];  var setBodyStats = _b[1];
-  var _t  = React.useState(null);                          var toast     = _t[0];  var setToast     = _t[1];
-  var _l  = React.useState(true);                          var loading   = _l[0];  var setLoading   = _l[1];
+  var _r   = React.useState(window.location.hash || '#/'); var route      = _r[0];   var setRoute      = _r[1];
+  var _ss  = React.useState(false);                         var showSetup  = _ss[0];  var setShowSetup  = _ss[1];
+  var _h   = React.useState([]);                            var history    = _h[0];   var setHistory    = _h[1];
+  var _mh  = React.useState([]);                            var mobHistory = _mh[0];  var setMobHistory = _mh[1];
+  var _b   = React.useState([]);                            var bodyStats  = _b[0];   var setBodyStats  = _b[1];
+  var _t   = React.useState(null);                          var toast      = _t[0];   var setToast      = _t[1];
+  var _l   = React.useState(true);                          var loading    = _l[0];   var setLoading    = _l[1];
 
   React.useEffect(function() {
     var onHash = function(){ setRoute(window.location.hash || '#/'); };
@@ -176,9 +237,11 @@ var App = function() {
       Promise.all([
         GH.readFile('data/history.json'),
         GH.readFile('data/body_stats.json'),
+        GH.readFile('data/mobility_history.json'),
       ]).then(function(results) {
         if (results[0]) setHistory(results[0].data);
         if (results[1]) setBodyStats(results[1].data);
+        if (results[2]) setMobHistory(results[2].data);
         setLoading(false);
       }).catch(function(e) {
         console.warn('Could not load data:', e.message);
@@ -199,6 +262,14 @@ var App = function() {
       .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
   };
 
+  var saveMobility = function(session) {
+    var updated = mobHistory.concat([session]);
+    setMobHistory(updated);
+    return GH.writeFile('data/mobility_history.json', updated, 'Log mobility: ' + session.name)
+      .then(function(){ showToast('Mobility session saved ✓'); })
+      .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
+  };
+
   var saveBodyStat = function(entry) {
     var updated = bodyStats.concat([entry]);
     setBodyStats(updated);
@@ -214,11 +285,12 @@ var App = function() {
   };
 
   var navItems = [
-    { label: 'Dashboard',    hash: '#/'         },
-    { label: 'Log Workout',  hash: '#/log'       },
-    { label: 'Exercises',    hash: '#/exercises' },
-    { label: 'Body Stats',   hash: '#/body-stats'},
-    { label: 'History',      hash: '#/history'   },
+    { label: 'Dashboard',    hash: '#/'          },
+    { label: 'Log Workout',  hash: '#/log'        },
+    { label: 'Log Mobility', hash: '#/mobility'   },
+    { label: 'Exercises',    hash: '#/exercises'  },
+    { label: 'Body Stats',   hash: '#/body-stats' },
+    { label: 'History',      hash: '#/history'    },
   ];
 
   var renderPage = function() {
@@ -232,11 +304,12 @@ var App = function() {
         </div>
       );
     }
-    if (route === '#/' || route === '')    return <Dashboard    history={history} bodyStats={bodyStats} />;
-    if (route === '#/log')                 return <WorkoutLogger onSave={saveWorkout} />;
-    if (route === '#/exercises')           return <ExercisesPage />;
-    if (route === '#/body-stats')          return <BodyStats    stats={bodyStats} onSave={saveBodyStat} />;
-    if (route === '#/history')             return <HistoryPage  history={history} />;
+    if (route === '#/' || route === '')  return <Dashboard     history={history} bodyStats={bodyStats} />;
+    if (route === '#/log')               return <WorkoutLogger  onSave={saveWorkout} />;
+    if (route === '#/mobility')          return <MobilityLogger onSave={saveMobility} />;
+    if (route === '#/exercises')         return <ExercisesPage />;
+    if (route === '#/body-stats')        return <BodyStats      stats={bodyStats} onSave={saveBodyStat} />;
+    if (route === '#/history')           return <HistoryPage    history={history} mobHistory={mobHistory} />;
     return <Dashboard history={history} bodyStats={bodyStats} />;
   };
 
