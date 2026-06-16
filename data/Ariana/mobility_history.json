@@ -36,5 +36,24 @@
         "completed": true
       }
     ]
+  },
+  {
+    "name": "Mobility Session",
+    "date": "2026-06-16T21:30:47.257Z",
+    "duration": 3,
+    "movements": [
+      {
+        "id": "90-90-stretch",
+        "name": "90/90 Hip Stretch",
+        "bodyPart": "Hips",
+        "type": "Static Stretch",
+        "trackMode": "hold",
+        "holdSeconds": 45,
+        "reps": null,
+        "side": "both",
+        "notes": "",
+        "completed": true
+      }
+    ]
   }
 ]
