@@ -1,32 +1,33 @@
-// app.jsx — Root component with hash routing
-// UMD mode: React/ReactDOM are on window, no imports needed
+// app.jsx — Root component, hash routing, no imports
 
-// ── Setup / GitHub config modal ──────────────────────────────
-const SetupModal = ({ onSave }) => {
-  const [token,   setToken]   = React.useState(localStorage.getItem('gh_token')  || '');
-  const [owner,   setOwner]   = React.useState(localStorage.getItem('gh_owner')  || '');
-  const [repo,    setRepo]    = React.useState(localStorage.getItem('gh_repo')   || '');
-  const [branch,  setBranch]  = React.useState(localStorage.getItem('gh_branch') || 'main');
-  const [error,   setError]   = React.useState('');
-  const [testing, setTesting] = React.useState(false);
+// ── GitHub Setup Modal ────────────────────────────────────────
+var SetupModal = function(props) {
+  var onSave = props.onSave;
 
-  const handleSave = async () => {
+  var _1 = React.useState(localStorage.getItem('gh_token')  || ''); var token  = _1[0]; var setToken  = _1[1];
+  var _2 = React.useState(localStorage.getItem('gh_owner')  || ''); var owner  = _2[0]; var setOwner  = _2[1];
+  var _3 = React.useState(localStorage.getItem('gh_repo')   || ''); var repo   = _3[0]; var setRepo   = _3[1];
+  var _4 = React.useState(localStorage.getItem('gh_branch') || 'main'); var branch = _4[0]; var setBranch = _4[1];
+  var _5 = React.useState('');    var error   = _5[0]; var setError   = _5[1];
+  var _6 = React.useState(false); var testing = _6[0]; var setTesting = _6[1];
+
+  var handleSave = function() {
     if (!token || !owner || !repo) { setError('All fields are required.'); return; }
     setTesting(true); setError('');
     localStorage.setItem('gh_token',  token);
     localStorage.setItem('gh_owner',  owner);
     localStorage.setItem('gh_repo',   repo);
     localStorage.setItem('gh_branch', branch);
-    try {
-      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    fetch('https://api.github.com/repos/' + owner + '/' + repo, {
+      headers: { Authorization: 'Bearer ' + token },
+    }).then(function(res) {
       if (!res.ok) throw new Error('Could not reach repo. Check owner/repo name and token permissions.');
       onSave();
-    } catch (e) {
+    }).catch(function(e) {
       setError(e.message);
-    }
-    setTesting(false);
+    }).finally(function() {
+      setTesting(false);
+    });
   };
 
   return (
@@ -34,40 +35,38 @@ const SetupModal = ({ onSave }) => {
       <div className="modal">
         <div className="modal-title">Connect Your Repo</div>
         <p className="modal-sub">
-          Lift Log saves your data as JSON files in your GitHub repo. Create a{' '}
+          Lift Log saves data as JSON files in your GitHub repo. Create a{' '}
           <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noreferrer"
-             style={{ color: 'var(--accent)' }}>
-            Personal Access Token
-          </a>{' '}
-          with <strong>repo</strong> scope, then paste it below. Your token stays in your browser only.
+             style={{ color: 'var(--accent)' }}>Personal Access Token</a>{' '}
+          with <strong>repo</strong> scope. Your token is stored only in your browser.
         </p>
 
         <div className="input-group">
           <label className="label">Personal Access Token</label>
           <input className="input" type="password" placeholder="ghp_xxxxxxxxxxxx"
-                 value={token} onChange={e => setToken(e.target.value)} />
+                 value={token} onChange={function(e){ setToken(e.target.value); }} />
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div className="input-group">
             <label className="label">GitHub Username</label>
             <input className="input" placeholder="your-username"
-                   value={owner} onChange={e => setOwner(e.target.value)} />
+                   value={owner} onChange={function(e){ setOwner(e.target.value); }} />
           </div>
           <div className="input-group">
             <label className="label">Repository Name</label>
             <input className="input" placeholder="workout-tracker"
-                   value={repo} onChange={e => setRepo(e.target.value)} />
+                   value={repo} onChange={function(e){ setRepo(e.target.value); }} />
           </div>
         </div>
 
         <div className="input-group">
           <label className="label">Branch</label>
           <input className="input" placeholder="main"
-                 value={branch} onChange={e => setBranch(e.target.value)} />
+                 value={branch} onChange={function(e){ setBranch(e.target.value); }} />
         </div>
 
-        {error && <p style={{ color: 'var(--danger)', fontSize: 13 }}>⚠ {error}</p>}
+        {error ? <p style={{ color: 'var(--danger)', fontSize: 13 }}>⚠ {error}</p> : null}
 
         <button className="btn btn-primary w-full" onClick={handleSave} disabled={testing}>
           {testing ? 'Testing connection…' : 'Save & Connect'}
@@ -78,193 +77,186 @@ const SetupModal = ({ onSave }) => {
 };
 
 // ── Toast ─────────────────────────────────────────────────────
-const Toast = ({ message, onDone }) => {
-  React.useEffect(() => { const t = setTimeout(onDone, 2500); return () => clearTimeout(t); }, []);
+var Toast = function(props) {
+  var message = props.message; var onDone = props.onDone;
+  React.useEffect(function() {
+    var t = setTimeout(onDone, 2500);
+    return function(){ clearTimeout(t); };
+  }, []);
   return <div className="toast">{message}</div>;
 };
 
-// ── Exercises page ────────────────────────────────────────────
-const ExercisesPage = () => (
-  <div>
-    <h2 className="section-heading">Exercise Library</h2>
-    <p className="section-sub">208 exercises across 15 muscle groups</p>
-    <ExerciseBrowser />
-  </div>
-);
+// ── Exercises Page ────────────────────────────────────────────
+var ExercisesPage = function() {
+  return (
+    <div>
+      <h2 className="section-heading">Exercise Library</h2>
+      <p className="section-sub">208 exercises across 15 muscle groups</p>
+      <ExerciseBrowser />
+    </div>
+  );
+};
 
-// ── History page ──────────────────────────────────────────────
-const HistoryPage = ({ history }) => (
-  <div>
-    <h2 className="section-heading">Workout History</h2>
-    {history.length === 0 ? (
-      <div className="empty-state">
-        <div className="empty-state-icon">📋</div>
-        <h3>No workouts logged yet</h3>
-        <p>Complete a workout session to see it here</p>
-      </div>
-    ) : (
-      <div className="history-list">
-        {[...history].reverse().map((session, i) => (
-          <div key={i} className="history-item">
-            <div className="history-item-header">
-              <span className="history-item-name">{session.name || 'Workout'}</span>
-              <span className="history-item-date">
-                {new Date(session.date).toLocaleDateString('en-US', {
-                  weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
-                })}
-              </span>
-            </div>
-            {session.duration && (
-              <div className="text-sm text-muted mt-4">⏱ {Math.round(session.duration / 60)} min</div>
-            )}
-            <div className="history-item-exercises mt-8">
-              {(session.exercises || []).map((ex, j) => (
-                <span key={j} className="tag tag-secondary">{ex.name}</span>
-              ))}
-            </div>
-            {(session.exercises || []).map((ex, j) => (
-              <div key={j} style={{ marginTop: 10 }}>
-                <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{ex.name}</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                  {(ex.sets || []).map((set, k) => (
-                    <span key={k} className="tag tag-equipment" style={{ fontSize: 11 }}>
-                      {set.weight ? `${set.weight} lbs × ` : ''}{set.reps} reps
-                      {set.type && set.type !== 'normal' ? ` (${set.type})` : ''}
-                    </span>
-                  ))}
+// ── History Page ──────────────────────────────────────────────
+var HistoryPage = function(props) {
+  var history = props.history || [];
+  return (
+    <div>
+      <h2 className="section-heading">Workout History</h2>
+      {history.length === 0 ? (
+        <div className="empty-state">
+          <div className="empty-state-icon">📋</div>
+          <h3>No workouts logged yet</h3>
+          <p>Complete a workout session to see it here</p>
+        </div>
+      ) : (
+        <div className="history-list">
+          {[...history].reverse().map(function(session, i) {
+            return (
+              <div key={i} className="history-item">
+                <div className="history-item-header">
+                  <span className="history-item-name">{session.name || 'Workout'}</span>
+                  <span className="history-item-date">
+                    {new Date(session.date).toLocaleDateString('en-US', {
+                      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+                    })}
+                  </span>
                 </div>
+                {session.duration ? (
+                  <div className="text-sm text-muted mt-4">
+                    ⏱ {Math.round(session.duration / 60)} min
+                  </div>
+                ) : null}
+                <div className="history-item-exercises mt-8">
+                  {(session.exercises || []).map(function(ex, j) {
+                    return <span key={j} className="tag tag-secondary">{ex.name}</span>;
+                  })}
+                </div>
+                {(session.exercises || []).map(function(ex, j) {
+                  return (
+                    <div key={j} style={{ marginTop: 10 }}>
+                      <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{ex.name}</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {(ex.sets || []).map(function(set, k) {
+                          return (
+                            <span key={k} className="tag tag-equipment" style={{ fontSize: 11 }}>
+                              {set.weight ? set.weight + ' lbs × ' : ''}{set.reps} reps
+                              {set.type && set.type !== 'normal' ? ' (' + set.type + ')' : ''}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-          </div>
-        ))}
-      </div>
-    )}
-  </div>
-);
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
 
 // ── Root App ──────────────────────────────────────────────────
-const App = () => {
-  const [route,     setRoute]     = React.useState(window.location.hash || '#/');
-  const [showSetup, setShowSetup] = React.useState(false);
-  const [history,   setHistory]   = React.useState([]);
-  const [bodyStats, setBodyStats] = React.useState([]);
-  const [toast,     setToast]     = React.useState(null);
-  const [loading,   setLoading]   = React.useState(true);
+var App = function() {
+  var _r  = React.useState(window.location.hash || '#/'); var route     = _r[0];  var setRoute     = _r[1];
+  var _ss = React.useState(false);                         var showSetup = _ss[0]; var setShowSetup = _ss[1];
+  var _h  = React.useState([]);                            var history   = _h[0];  var setHistory   = _h[1];
+  var _b  = React.useState([]);                            var bodyStats = _b[0];  var setBodyStats = _b[1];
+  var _t  = React.useState(null);                          var toast     = _t[0];  var setToast     = _t[1];
+  var _l  = React.useState(true);                          var loading   = _l[0];  var setLoading   = _l[1];
 
   // Hash routing
-  React.useEffect(() => {
-    const onHash = () => setRoute(window.location.hash || '#/');
+  React.useEffect(function() {
+    var onHash = function(){ setRoute(window.location.hash || '#/'); };
     window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
+    return function(){ window.removeEventListener('hashchange', onHash); };
   }, []);
 
-  const navigate = (path) => { window.location.hash = path; };
+  var navigate = function(path){ window.location.hash = path; };
 
-  // Load data on mount
-  React.useEffect(() => {
-    const load = async () => {
-      const configured = await GH.isConfigured();
+  // Load data
+  var loadData = function() {
+    GH.isConfigured().then(function(configured) {
       if (!configured) { setLoading(false); setShowSetup(true); return; }
-      try {
-        const [h, b] = await Promise.all([
-          GH.readFile('data/history.json'),
-          GH.readFile('data/body_stats.json'),
-        ]);
-        if (h) setHistory(h.data);
-        if (b) setBodyStats(b.data);
-      } catch (e) {
+      Promise.all([
+        GH.readFile('data/history.json'),
+        GH.readFile('data/body_stats.json'),
+      ]).then(function(results) {
+        if (results[0]) setHistory(results[0].data);
+        if (results[1]) setBodyStats(results[1].data);
+        setLoading(false);
+      }).catch(function(e) {
         console.warn('Could not load data:', e.message);
-      }
-      setLoading(false);
-    };
-    load();
-  }, []);
-
-  const showToast = (msg) => setToast(msg);
-
-  const saveHistory = React.useCallback(async (newHistory) => {
-    setHistory(newHistory);
-    try {
-      await GH.writeFile('data/history.json', newHistory, 'Update workout history');
-      showToast('Workout saved ✓');
-    } catch (e) {
-      showToast('⚠ Save failed: ' + e.message);
-    }
-  }, []);
-
-  const saveBodyStat = React.useCallback(async (entry) => {
-    const updated = [...bodyStats, entry];
-    setBodyStats(updated);
-    try {
-      await GH.writeFile('data/body_stats.json', updated, 'Update body stats');
-      showToast('Stats saved ✓');
-    } catch (e) {
-      showToast('⚠ Save failed: ' + e.message);
-    }
-  }, [bodyStats]);
-
-  const handleSetupSave = () => {
-    setShowSetup(false);
-    setLoading(true);
-    const reload = async () => {
-      try {
-        const [h, b] = await Promise.all([
-          GH.readFile('data/history.json'),
-          GH.readFile('data/body_stats.json'),
-        ]);
-        if (h) setHistory(h.data);
-        if (b) setBodyStats(b.data);
-      } catch (_) {}
-      setLoading(false);
-    };
-    reload();
+        setLoading(false);
+      });
+    });
   };
 
-  const navItems = [
-    { label: 'Dashboard',  hash: '#/' },
-    { label: 'Exercises',  hash: '#/exercises' },
+  React.useEffect(function(){ loadData(); }, []);
+
+  var showToast = function(msg){ setToast(msg); };
+
+  var saveBodyStat = function(entry) {
+    var updated = bodyStats.concat([entry]);
+    setBodyStats(updated);
+    return GH.writeFile('data/body_stats.json', updated, 'Update body stats')
+      .then(function(){ showToast('Stats saved ✓'); })
+      .catch(function(e){ showToast('⚠ Save failed: ' + e.message); });
+  };
+
+  var handleSetupSave = function() {
+    setShowSetup(false);
+    setLoading(true);
+    loadData();
+  };
+
+  var navItems = [
+    { label: 'Dashboard',  hash: '#/'          },
+    { label: 'Exercises',  hash: '#/exercises'  },
     { label: 'Body Stats', hash: '#/body-stats' },
-    { label: 'History',    hash: '#/history' },
+    { label: 'History',    hash: '#/history'    },
   ];
 
-  const renderPage = () => {
-    if (loading) return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
-        <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-          <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
-          <p>Loading your data…</p>
+  var renderPage = function() {
+    if (loading) {
+      return (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
+          <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+            <div style={{ fontSize: 32, marginBottom: 12 }}>⏳</div>
+            <p>Loading your data…</p>
+          </div>
         </div>
-      </div>
-    );
-
-    switch (route) {
-      case '#/':          return <Dashboard  history={history} bodyStats={bodyStats} />;
-      case '#/exercises': return <ExercisesPage />;
-      case '#/body-stats':return <BodyStats  stats={bodyStats} onSave={saveBodyStat} />;
-      case '#/history':   return <HistoryPage history={history} />;
-      default:            return <Dashboard  history={history} bodyStats={bodyStats} />;
+      );
     }
+    if (route === '#/' || route === '')   return <Dashboard  history={history} bodyStats={bodyStats} />;
+    if (route === '#/exercises')          return <ExercisesPage />;
+    if (route === '#/body-stats')         return <BodyStats  stats={bodyStats} onSave={saveBodyStat} />;
+    if (route === '#/history')            return <HistoryPage history={history} />;
+    return <Dashboard history={history} bodyStats={bodyStats} />;
   };
 
   return (
     <div className="app-shell">
-      {showSetup && <SetupModal onSave={handleSetupSave} />}
+      {showSetup ? <SetupModal onSave={handleSetupSave} /> : null}
 
       <header className="topbar">
         <div className="topbar-logo">🏋️ Lift Log</div>
-
         <nav className="topbar-nav">
-          {navItems.map(item => (
-            <button key={item.hash}
-                    className={`nav-btn ${route === item.hash ? 'active' : ''}`}
-                    onClick={() => navigate(item.hash)}>
-              {item.label}
-            </button>
-          ))}
+          {navItems.map(function(item) {
+            return (
+              <button key={item.hash}
+                      className={'nav-btn ' + (route === item.hash ? 'active' : '')}
+                      onClick={function(){ navigate(item.hash); }}>
+                {item.label}
+              </button>
+            );
+          })}
         </nav>
-
         <div className="topbar-actions">
-          <button className="btn btn-ghost btn-sm" onClick={() => setShowSetup(true)} title="GitHub settings">
+          <button className="btn btn-ghost btn-sm"
+                  onClick={function(){ setShowSetup(true); }}>
             ⚙ GitHub
           </button>
         </div>
@@ -274,11 +266,12 @@ const App = () => {
         {renderPage()}
       </main>
 
-      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
+      {toast ? <Toast message={toast} onDone={function(){ setToast(null); }} /> : null}
     </div>
   );
 };
 
 // Mount
-const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
+var rootEl = document.getElementById('root');
+var appRoot = ReactDOM.createRoot(rootEl);
+appRoot.render(React.createElement(App, null));

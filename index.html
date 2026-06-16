@@ -5,13 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lift Log</title>
 
-  <!-- React + Babel (no build step needed) -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- React 18 UMD (no JSX runtime, no module system) -->
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 
-  <!-- Recharts for graphs -->
-  <script src="https://unpkg.com/recharts@2.12.7/umd/Recharts.js"></script>
+  <!-- Babel standalone: transforms JSX in <script type="text/babel"> tags -->
+  <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,8 +22,13 @@
 <body>
   <div id="root"></div>
 
-  <!-- NO data-type="module" — Babel standalone handles JSX transformation -->
+  <!--
+    IMPORTANT: type="text/babel" only — no data-type, no module.
+    Babel standalone intercepts these and transforms JSX to plain JS.
+    Load order matters: dependencies before consumers.
+  -->
   <script type="text/babel" src="components/github.jsx"></script>
+  <script type="text/babel" src="components/MiniChart.jsx"></script>
   <script type="text/babel" src="components/ExerciseBrowser.jsx"></script>
   <script type="text/babel" src="components/Dashboard.jsx"></script>
   <script type="text/babel" src="components/BodyStats.jsx"></script>
