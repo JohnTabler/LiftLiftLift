@@ -1,5 +1,31 @@
 // app.jsx — Root component with hash routing + mobile bottom nav
 
+// ── Profile Picker Modal ──────────────────────────────────────
+var PROFILES = ['John', 'Ariana'];
+
+var ProfilePicker = function(props) {
+  var onSelect = props.onSelect;
+  return (
+    <div className="modal-overlay">
+      <div className="modal" style={{ maxWidth: 340, textAlign: 'center' }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🏋️</div>
+        <div className="modal-title">Who's working out?</div>
+        <p className="modal-sub" style={{ marginBottom: 24 }}>Choose your profile to load your data.</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {PROFILES.map(function(name) {
+            return (
+              <button key={name} className="btn btn-primary w-full" style={{ fontSize: 16, padding: '14px' }}
+                      onClick={function(){ onSelect(name); }}>
+                {name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ── GitHub Setup Modal ────────────────────────────────────────
 var SetupModal = function(props) {
   var onSave = props.onSave;
@@ -84,10 +110,14 @@ var MoreDrawer = function(props) {
   var onClose     = props.onClose;
   var onGitHub    = props.onGitHub;
 
+  var activeProfile = props.activeProfile;
+  var onSwitchProfile = props.onSwitchProfile;
+
   var items = [
-    { icon: '📚', label: 'Exercise Library', hash: '#/exercises'  },
-    { icon: '📋', label: 'History',          hash: '#/history'    },
-    { icon: '⚙',  label: 'GitHub Settings',  hash: null           },
+    { icon: '📚', label: 'Exercise Library', action: 'nav',     hash: '#/exercises' },
+    { icon: '📋', label: 'History',          action: 'nav',     hash: '#/history'   },
+    { icon: '👤', label: 'Switch Profile (' + (activeProfile === 'John' ? 'Ariana' : 'John') + ')', action: 'profile', hash: null },
+    { icon: '⚙',  label: 'GitHub Settings',  action: 'github',  hash: null          },
   ];
 
   return (
@@ -98,8 +128,9 @@ var MoreDrawer = function(props) {
           return (
             <button key={item.label} className="more-drawer-item"
                     onClick={function(){
-                      if (item.hash) { onNavigate(item.hash); }
-                      else           { onGitHub(); }
+                      if      (item.action === 'nav')     { onNavigate(item.hash); }
+                      else if (item.action === 'profile') { onSwitchProfile(); }
+                      else                                { onGitHub(); }
                       onClose();
                     }}>
               <span className="more-drawer-item-icon">{item.icon}</span>
@@ -292,6 +323,8 @@ var App = function() {
   var _b   = React.useState([]);                            var bodyStats  = _b[0];   var setBodyStats  = _b[1];
   var _t   = React.useState(null);                          var toast      = _t[0];   var setToast      = _t[1];
   var _l   = React.useState(true);                          var loading    = _l[0];   var setLoading    = _l[1];
+  var _pr  = React.useState(localStorage.getItem('gh_profile') || null); var activeProfile = _pr[0]; var setActiveProfile = _pr[1];
+  var _sp  = React.useState(false);                         var showProfilePicker = _sp[0]; var setShowProfilePicker = _sp[1];
 
   // Hash routing
   React.useEffect(function() {
@@ -305,10 +338,25 @@ var App = function() {
     setMoreOpen(false);
   };
 
+  var handleSelectProfile = function(name) {
+    localStorage.setItem('gh_profile', name);
+    setActiveProfile(name);
+    setShowProfilePicker(false);
+    setLoading(true);
+    loadData();
+  };
+
+  var switchProfile = function() {
+    var next = activeProfile === 'John' ? 'Ariana' : 'John';
+    handleSelectProfile(next);
+    setMoreOpen(false);
+  };
+
   // Load data
   var loadData = function() {
     GH.isConfigured().then(function(configured) {
       if (!configured) { setLoading(false); setShowSetup(true); return; }
+      if (!localStorage.getItem('gh_profile')) { setLoading(false); setShowProfilePicker(true); return; }
       Promise.all([
         GH.readFile('data/history.json'),
         GH.readFile('data/body_stats.json'),
@@ -392,6 +440,7 @@ var App = function() {
   return (
     <div className="app-shell">
       {showSetup ? <SetupModal onSave={handleSetupSave} /> : null}
+      {showProfilePicker ? <ProfilePicker onSelect={handleSelectProfile} /> : null}
 
       {/* Top bar — visible on desktop, logo-only on mobile */}
       <header className="topbar">
@@ -408,8 +457,14 @@ var App = function() {
             );
           })}
         </nav>
-        {/* Desktop GitHub button */}
-        <div className="topbar-actions">
+        {/* Desktop actions */}
+        <div className="topbar-actions" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          {activeProfile && (
+            <button className="btn btn-ghost btn-sm" onClick={function(){ setShowProfilePicker(true); }}
+                    style={{ fontWeight: 700 }}>
+              👤 {activeProfile}
+            </button>
+          )}
           <button className="btn btn-ghost btn-sm" onClick={function(){ setShowSetup(true); }}>
             ⚙ GitHub
           </button>
@@ -435,6 +490,8 @@ var App = function() {
           onNavigate={navigate}
           onClose={function(){ setMoreOpen(false); }}
           onGitHub={function(){ setShowSetup(true); }}
+          activeProfile={activeProfile}
+          onSwitchProfile={switchProfile}
         />
       )}
 
