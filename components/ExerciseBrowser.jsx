@@ -1,28 +1,39 @@
 // components/ExerciseBrowser.jsx
-// UMD mode: React is on window.React, no imports needed
 
-const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
-  const [exercises, setExercises] = React.useState([]);
-  const [muscle,    setMuscle]    = React.useState('All');
-  const [equipment, setEquipment] = React.useState('All');
-  const [search,    setSearch]    = React.useState('');
+var ExerciseBrowser = function(props) {
+  var onAdd     = props.onAdd;
+  var addLabel  = props.addLabel  || '+ Add';
+  var compact   = props.compact   || false;
 
-  React.useEffect(() => {
+  var _s1 = React.useState([]);
+  var exercises   = _s1[0]; var setExercises = _s1[1];
+  var _s2 = React.useState('All');
+  var muscle      = _s2[0]; var setMuscle    = _s2[1];
+  var _s3 = React.useState('All');
+  var equipment   = _s3[0]; var setEquipment = _s3[1];
+  var _s4 = React.useState('');
+  var search      = _s4[0]; var setSearch    = _s4[1];
+
+  React.useEffect(function() {
     fetch('data/exercises.json')
-      .then(r => r.json())
+      .then(function(r){ return r.json(); })
       .then(setExercises)
-      .catch(() => console.error('Could not load exercises.json'));
+      .catch(function(){ console.error('Could not load exercises.json'); });
   }, []);
 
-  const muscles    = ['All', ...Array.from(new Set(exercises.map(e => e.primaryMuscle))).sort()];
-  const equipments = ['All', ...Array.from(new Set(exercises.map(e => e.equipment))).sort()];
+  var muscles = ['All'].concat(
+    Array.from(new Set(exercises.map(function(e){ return e.primaryMuscle; }))).sort()
+  );
+  var equipments = ['All'].concat(
+    Array.from(new Set(exercises.map(function(e){ return e.equipment; }))).sort()
+  );
 
-  const filtered = exercises.filter(e => {
-    const matchMuscle = muscle    === 'All' || e.primaryMuscle === muscle;
-    const matchEquip  = equipment === 'All' || e.equipment     === equipment;
-    const matchSearch = !search   ||
-      e.name.toLowerCase().includes(search.toLowerCase()) ||
-      e.primaryMuscle.toLowerCase().includes(search.toLowerCase());
+  var filtered = exercises.filter(function(e) {
+    var matchMuscle = muscle    === 'All' || e.primaryMuscle === muscle;
+    var matchEquip  = equipment === 'All' || e.equipment     === equipment;
+    var matchSearch = !search   ||
+      e.name.toLowerCase().indexOf(search.toLowerCase()) !== -1 ||
+      e.primaryMuscle.toLowerCase().indexOf(search.toLowerCase()) !== -1;
     return matchMuscle && matchEquip && matchSearch;
   });
 
@@ -30,38 +41,41 @@ const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
     <div>
       {/* Muscle group chips */}
       <div className="chip-bar">
-        {muscles.map(m => (
-          <button key={m} className={`chip ${muscle === m ? 'active' : ''}`} onClick={() => setMuscle(m)}>
-            {m}
-          </button>
-        ))}
+        {muscles.map(function(m) {
+          return (
+            <button key={m} className={'chip ' + (muscle === m ? 'active' : '')}
+                    onClick={function(){ setMuscle(m); }}>
+              {m}
+            </button>
+          );
+        })}
       </div>
 
       {/* Equipment chips */}
       <div className="chip-bar" style={{ marginBottom: 12 }}>
-        {equipments.map(eq => (
-          <button key={eq} className={`chip ${equipment === eq ? 'active' : ''}`}
-                  onClick={() => setEquipment(eq)} style={{ fontSize: 11 }}>
-            {eq}
-          </button>
-        ))}
+        {equipments.map(function(eq) {
+          return (
+            <button key={eq} className={'chip ' + (equipment === eq ? 'active' : '')}
+                    onClick={function(){ setEquipment(eq); }} style={{ fontSize: 11 }}>
+              {eq}
+            </button>
+          );
+        })}
       </div>
 
       {/* Search */}
       <div className="search-bar-wrap">
         <span className="search-icon">⌕</span>
         <input className="input" placeholder="Search exercises…"
-               value={search} onChange={e => setSearch(e.target.value)} />
+               value={search} onChange={function(e){ setSearch(e.target.value); }} />
       </div>
 
-      {/* Count */}
       <p className="text-muted text-sm mb-12">
         {filtered.length} exercise{filtered.length !== 1 ? 's' : ''}
-        {muscle    !== 'All' ? ` · ${muscle}`    : ''}
-        {equipment !== 'All' ? ` · ${equipment}` : ''}
+        {muscle    !== 'All' ? ' · ' + muscle    : ''}
+        {equipment !== 'All' ? ' · ' + equipment : ''}
       </p>
 
-      {/* Grid */}
       {filtered.length === 0 ? (
         <div className="empty-state">
           <div className="empty-state-icon">🔍</div>
@@ -70,34 +84,37 @@ const ExerciseBrowser = ({ onAdd, addLabel = '+ Add', compact = false }) => {
         </div>
       ) : (
         <div className={compact ? 'flex flex-col gap-8' : 'exercise-grid'}>
-          {filtered.map(ex => (
-            <div key={ex.id} className="exercise-card">
-              <div className="exercise-name">{ex.name}</div>
+          {filtered.map(function(ex) {
+            return (
+              <div key={ex.id} className="exercise-card">
+                <div className="exercise-name">{ex.name}</div>
 
-              <div className="exercise-meta">
-                <span className="tag tag-primary">{ex.primaryMuscle}</span>
-                <span className="tag tag-equipment">{ex.equipment}</span>
-                {ex.secondaryMuscles && ex.secondaryMuscles.slice(0, 2).map(m => (
-                  <span key={m} className="tag tag-secondary">{m}</span>
-                ))}
+                <div className="exercise-meta">
+                  <span className="tag tag-primary">{ex.primaryMuscle}</span>
+                  <span className="tag tag-equipment">{ex.equipment}</span>
+                  {(ex.secondaryMuscles || []).slice(0, 2).map(function(m) {
+                    return <span key={m} className="tag tag-secondary">{m}</span>;
+                  })}
+                </div>
+
+                {ex.secondaryMuscles && ex.secondaryMuscles.length > 0 && (
+                  <div className="text-sm text-muted">
+                    Also works: {ex.secondaryMuscles.join(', ')}
+                  </div>
+                )}
+
+                {onAdd && (
+                  <div className="exercise-card-footer">
+                    <span className="tag tag-secondary" style={{ fontSize: 10 }}>{ex.category}</span>
+                    <button className="btn btn-primary btn-sm"
+                            onClick={function(){ onAdd(ex); }}>
+                      {addLabel}
+                    </button>
+                  </div>
+                )}
               </div>
-
-              {ex.secondaryMuscles && ex.secondaryMuscles.length > 0 && (
-                <div className="text-sm text-muted">
-                  Also works: {ex.secondaryMuscles.join(', ')}
-                </div>
-              )}
-
-              {onAdd && (
-                <div className="exercise-card-footer">
-                  <span className="tag tag-secondary" style={{ fontSize: 10 }}>{ex.category}</span>
-                  <button className="btn btn-primary btn-sm" onClick={() => onAdd(ex)}>
-                    {addLabel}
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>
