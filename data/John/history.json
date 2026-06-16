@@ -1,0 +1,23 @@
+[
+  {
+    "name": "My Workout",
+    "date": "2026-06-16T19:50:43.311Z",
+    "duration": 5,
+    "exercises": [
+      {
+        "id": "diamond-push-up",
+        "name": "Diamond Push Up",
+        "primaryMuscle": "Triceps",
+        "supersetId": null,
+        "restSeconds": 90,
+        "sets": [
+          {
+            "weight": 20,
+            "reps": 5,
+            "type": "normal"
+          }
+        ]
+      }
+    ]
+  }
+]
