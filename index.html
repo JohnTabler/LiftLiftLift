@@ -23,11 +23,11 @@
 <body>
   <div id="root"></div>
 
-  <!-- Load components in dependency order -->
-  <script type="text/babel" src="components/github.jsx"       data-type="module"></script>
-  <script type="text/babel" src="components/ExerciseBrowser.jsx" data-type="module"></script>
-  <script type="text/babel" src="components/Dashboard.jsx"    data-type="module"></script>
-  <script type="text/babel" src="components/BodyStats.jsx"    data-type="module"></script>
-  <script type="text/babel" src="app.jsx"                     data-type="module"></script>
+  <!-- NO data-type="module" — Babel standalone handles JSX transformation -->
+  <script type="text/babel" src="components/github.jsx"></script>
+  <script type="text/babel" src="components/ExerciseBrowser.jsx"></script>
+  <script type="text/babel" src="components/Dashboard.jsx"></script>
+  <script type="text/babel" src="components/BodyStats.jsx"></script>
+  <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>
