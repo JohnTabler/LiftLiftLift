@@ -1,7 +1,7 @@
 [
   {
     "name": "Mobility Session",
-    "date": "2026-06-16T19:50:55.436Z",
+    "date": "2026-06-16T00:00:00.000Z",
     "duration": 6,
     "movements": [
       {
@@ -10,7 +10,7 @@
         "bodyPart": "Hips",
         "type": "Static Stretch",
         "trackMode": "hold",
-        "holdSeconds": 45,
+        "holdSeconds": "42",
         "reps": null,
         "side": "both",
         "notes": "",
