@@ -18,11 +18,17 @@ window.GH = (() => {
   const base = (owner, repo) =>
     `https://api.github.com/repos/${owner}/${repo}/contents`;
 
+  function getActiveProfile() {
+    return localStorage.getItem('gh_profile') || 'John';
+  }
+
   async function readFile(filePath) {
     const { token, owner, repo, branch } = getConfig();
     if (!token) throw new Error('No GitHub token configured');
+    var profile = getActiveProfile();
+    var profiledPath = filePath.startsWith('data/') ? 'data/' + profile + '/' + filePath.slice(5) : filePath;
     const res = await fetch(
-      `${base(owner, repo)}/${filePath}?ref=${branch}`,
+      `${base(owner, repo)}/${profiledPath}?ref=${branch}`,
       { headers: headers(token) }
     );
     if (res.status === 404) return null; // file doesn't exist yet
@@ -45,15 +51,17 @@ window.GH = (() => {
       if (existing) sha = existing.sha;
     } catch (_) {}
 
+    var profile = getActiveProfile();
+    var profiledPath = filePath.startsWith('data/') ? 'data/' + profile + '/' + filePath.slice(5) : filePath;
     const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
     const body = {
-      message: commitMsg || `Update ${filePath}`,
+      message: commitMsg || `Update ${profiledPath}`,
       content,
       branch,
       ...(sha ? { sha } : {}),
     };
 
-    const res = await fetch(`${base(owner, repo)}/${filePath}`, {
+    const res = await fetch(`${base(owner, repo)}/${profiledPath}`, {
       method: 'PUT',
       headers: headers(token),
       body: JSON.stringify(body),
@@ -71,5 +79,5 @@ window.GH = (() => {
     return !!(token && owner && repo);
   }
 
-  return { readFile, writeFile, isConfigured, getConfig };
+  return { readFile, writeFile, isConfigured, getConfig, getActiveProfile };
 })();
