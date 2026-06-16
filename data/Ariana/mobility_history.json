@@ -20,25 +20,6 @@
   },
   {
     "name": "Mobility Session",
-    "date": "2026-06-16T21:30:18.920Z",
-    "duration": 5,
-    "movements": [
-      {
-        "id": "hip-flexor-stretch",
-        "name": "Hip Flexor Stretch",
-        "bodyPart": "Hips",
-        "type": "Static Stretch",
-        "trackMode": "hold",
-        "holdSeconds": 20,
-        "reps": null,
-        "side": "both",
-        "notes": "",
-        "completed": true
-      }
-    ]
-  },
-  {
-    "name": "Mobility Session",
     "date": "2026-06-16T21:30:47.257Z",
     "duration": 3,
     "movements": [
