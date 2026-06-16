@@ -1,15 +1,14 @@
 // app.jsx — Root component with hash routing
-
-const { useState, useEffect, useCallback } = React;
+// UMD mode: React/ReactDOM are on window, no imports needed
 
 // ── Setup / GitHub config modal ──────────────────────────────
 const SetupModal = ({ onSave }) => {
-  const [token,  setToken]  = useState(localStorage.getItem('gh_token')  || '');
-  const [owner,  setOwner]  = useState(localStorage.getItem('gh_owner')  || '');
-  const [repo,   setRepo]   = useState(localStorage.getItem('gh_repo')   || '');
-  const [branch, setBranch] = useState(localStorage.getItem('gh_branch') || 'main');
-  const [error,  setError]  = useState('');
-  const [testing, setTesting] = useState(false);
+  const [token,   setToken]   = React.useState(localStorage.getItem('gh_token')  || '');
+  const [owner,   setOwner]   = React.useState(localStorage.getItem('gh_owner')  || '');
+  const [repo,    setRepo]    = React.useState(localStorage.getItem('gh_repo')   || '');
+  const [branch,  setBranch]  = React.useState(localStorage.getItem('gh_branch') || 'main');
+  const [error,   setError]   = React.useState('');
+  const [testing, setTesting] = React.useState(false);
 
   const handleSave = async () => {
     if (!token || !owner || !repo) { setError('All fields are required.'); return; }
@@ -19,9 +18,8 @@ const SetupModal = ({ onSave }) => {
     localStorage.setItem('gh_repo',   repo);
     localStorage.setItem('gh_branch', branch);
     try {
-      // Test connection
       const res = await fetch(`https://api.github.com/repos/${owner}/${repo}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error('Could not reach repo. Check owner/repo name and token permissions.');
       onSave();
@@ -36,14 +34,12 @@ const SetupModal = ({ onSave }) => {
       <div className="modal">
         <div className="modal-title">Connect Your Repo</div>
         <p className="modal-sub">
-          Lift Log saves your data as JSON files in your GitHub repo.
-          Create a{' '}
+          Lift Log saves your data as JSON files in your GitHub repo. Create a{' '}
           <a href="https://github.com/settings/tokens/new?scopes=repo" target="_blank" rel="noreferrer"
              style={{ color: 'var(--accent)' }}>
             Personal Access Token
           </a>{' '}
-          with <strong>repo</strong> scope, then paste it here.
-          Your token stays in your browser only.
+          with <strong>repo</strong> scope, then paste it below. Your token stays in your browser only.
         </p>
 
         <div className="input-group">
@@ -81,13 +77,13 @@ const SetupModal = ({ onSave }) => {
   );
 };
 
-// ── Toast helper ──────────────────────────────────────────────
+// ── Toast ─────────────────────────────────────────────────────
 const Toast = ({ message, onDone }) => {
-  useEffect(() => { const t = setTimeout(onDone, 2500); return () => clearTimeout(t); }, []);
+  React.useEffect(() => { const t = setTimeout(onDone, 2500); return () => clearTimeout(t); }, []);
   return <div className="toast">{message}</div>;
 };
 
-// ── Exercises page (full-page browser) ───────────────────────
+// ── Exercises page ────────────────────────────────────────────
 const ExercisesPage = () => (
   <div>
     <h2 className="section-heading">Exercise Library</h2>
@@ -119,16 +115,13 @@ const HistoryPage = ({ history }) => (
               </span>
             </div>
             {session.duration && (
-              <div className="text-sm text-muted mt-4">
-                ⏱ {Math.round(session.duration / 60)} min
-              </div>
+              <div className="text-sm text-muted mt-4">⏱ {Math.round(session.duration / 60)} min</div>
             )}
             <div className="history-item-exercises mt-8">
               {(session.exercises || []).map((ex, j) => (
                 <span key={j} className="tag tag-secondary">{ex.name}</span>
               ))}
             </div>
-            {/* Set detail */}
             {(session.exercises || []).map((ex, j) => (
               <div key={j} style={{ marginTop: 10 }}>
                 <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>{ex.name}</div>
@@ -151,15 +144,15 @@ const HistoryPage = ({ history }) => (
 
 // ── Root App ──────────────────────────────────────────────────
 const App = () => {
-  const [route,      setRoute]      = useState(window.location.hash || '#/');
-  const [showSetup,  setShowSetup]  = useState(false);
-  const [history,    setHistory]    = useState([]);
-  const [bodyStats,  setBodyStats]  = useState([]);
-  const [toast,      setToast]      = useState(null);
-  const [loading,    setLoading]    = useState(true);
+  const [route,     setRoute]     = React.useState(window.location.hash || '#/');
+  const [showSetup, setShowSetup] = React.useState(false);
+  const [history,   setHistory]   = React.useState([]);
+  const [bodyStats, setBodyStats] = React.useState([]);
+  const [toast,     setToast]     = React.useState(null);
+  const [loading,   setLoading]   = React.useState(true);
 
-  // ── Hash routing ─────────────────────────────────────────
-  useEffect(() => {
+  // Hash routing
+  React.useEffect(() => {
     const onHash = () => setRoute(window.location.hash || '#/');
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
@@ -167,8 +160,8 @@ const App = () => {
 
   const navigate = (path) => { window.location.hash = path; };
 
-  // ── Load data from GitHub on mount ───────────────────────
-  useEffect(() => {
+  // Load data on mount
+  React.useEffect(() => {
     const load = async () => {
       const configured = await GH.isConfigured();
       if (!configured) { setLoading(false); setShowSetup(true); return; }
@@ -189,8 +182,7 @@ const App = () => {
 
   const showToast = (msg) => setToast(msg);
 
-  // ── Save helpers ─────────────────────────────────────────
-  const saveHistory = useCallback(async (newHistory) => {
+  const saveHistory = React.useCallback(async (newHistory) => {
     setHistory(newHistory);
     try {
       await GH.writeFile('data/history.json', newHistory, 'Update workout history');
@@ -200,7 +192,7 @@ const App = () => {
     }
   }, []);
 
-  const saveBodyStat = useCallback(async (entry) => {
+  const saveBodyStat = React.useCallback(async (entry) => {
     const updated = [...bodyStats, entry];
     setBodyStats(updated);
     try {
@@ -214,7 +206,6 @@ const App = () => {
   const handleSetupSave = () => {
     setShowSetup(false);
     setLoading(true);
-    // Reload data after setup
     const reload = async () => {
       try {
         const [h, b] = await Promise.all([
@@ -229,7 +220,6 @@ const App = () => {
     reload();
   };
 
-  // ── Nav items ────────────────────────────────────────────
   const navItems = [
     { label: 'Dashboard',  hash: '#/' },
     { label: 'Exercises',  hash: '#/exercises' },
@@ -237,7 +227,6 @@ const App = () => {
     { label: 'History',    hash: '#/history' },
   ];
 
-  // ── Render page ──────────────────────────────────────────
   const renderPage = () => {
     if (loading) return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
@@ -248,60 +237,48 @@ const App = () => {
       </div>
     );
 
-    if (route === '#/' || route === '')
-      return <Dashboard history={history} bodyStats={bodyStats} />;
-    if (route === '#/exercises')
-      return <ExercisesPage />;
-    if (route === '#/body-stats')
-      return <BodyStats stats={bodyStats} onSave={saveBodyStat} />;
-    if (route === '#/history')
-      return <HistoryPage history={history} />;
-    return <Dashboard history={history} bodyStats={bodyStats} />;
+    switch (route) {
+      case '#/':          return <Dashboard  history={history} bodyStats={bodyStats} />;
+      case '#/exercises': return <ExercisesPage />;
+      case '#/body-stats':return <BodyStats  stats={bodyStats} onSave={saveBodyStat} />;
+      case '#/history':   return <HistoryPage history={history} />;
+      default:            return <Dashboard  history={history} bodyStats={bodyStats} />;
+    }
   };
 
   return (
     <div className="app-shell">
-      {/* Setup modal */}
       {showSetup && <SetupModal onSave={handleSetupSave} />}
 
-      {/* Top bar */}
       <header className="topbar">
         <div className="topbar-logo">🏋️ Lift Log</div>
 
         <nav className="topbar-nav">
           {navItems.map(item => (
-            <button
-              key={item.hash}
-              className={`nav-btn ${route === item.hash ? 'active' : ''}`}
-              onClick={() => navigate(item.hash)}
-            >
+            <button key={item.hash}
+                    className={`nav-btn ${route === item.hash ? 'active' : ''}`}
+                    onClick={() => navigate(item.hash)}>
               {item.label}
             </button>
           ))}
         </nav>
 
         <div className="topbar-actions">
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={() => setShowSetup(true)}
-            title="GitHub settings"
-          >
+          <button className="btn btn-ghost btn-sm" onClick={() => setShowSetup(true)} title="GitHub settings">
             ⚙ GitHub
           </button>
         </div>
       </header>
 
-      {/* Page content */}
       <main className="page-content">
         {renderPage()}
       </main>
 
-      {/* Toast */}
       {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   );
 };
 
-// ── Mount ─────────────────────────────────────────────────────
+// Mount
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
