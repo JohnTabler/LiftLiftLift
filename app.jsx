@@ -539,6 +539,24 @@ var HistoryPage = function(props) {
                       </div>
                     );
                   })}
+                  {session.supplements && (session.supplements.lastMeal || session.supplements.preWorkout || session.supplements.postProtein) && (
+                    <div style={{
+                      marginTop: 10, padding: '8px 12px',
+                      background: 'var(--surface2)', borderRadius: 8,
+                      fontSize: 12, display: 'flex', flexDirection: 'column', gap: 4,
+                    }}>
+                      <div style={{ fontWeight: 700, fontSize: 11, color: 'var(--text-muted)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.5px' }}>🥗 Nutrition</div>
+                      {session.supplements.lastMeal ? (
+                        <div><span style={{ color: 'var(--text-muted)' }}>Last meal:</span> {session.supplements.lastMeal}</div>
+                      ) : null}
+                      {session.supplements.preWorkout ? (
+                        <div><span style={{ color: 'var(--text-muted)' }}>Pre-workout:</span> ✓ taken</div>
+                      ) : null}
+                      {session.supplements.postProtein ? (
+                        <div><span style={{ color: 'var(--text-muted)' }}>Post-workout protein:</span> {session.supplements.postProtein}</div>
+                      ) : null}
+                    </div>
+                  )}
                   <button className="btn btn-ghost btn-sm" style={{ marginTop: 10, fontSize: 12 }}
                           onClick={function(){ setEditingWorkout(realIdx); }}>
                     ✏ Edit / Delete
