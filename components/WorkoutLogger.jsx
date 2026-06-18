@@ -413,6 +413,9 @@ var WorkoutLogger = function(props) {
   var _lf = React.useState(null);           var linkingFrom = _lf[0]; var setLinkingFrom = _lf[1];
   var _sv = React.useState(false);          var saving      = _sv[0]; var setSaving      = _sv[1];
   var _dn = React.useState(false);          var done        = _dn[0]; var setDone        = _dn[1];
+  var _sp = React.useState({ lastMeal: '', preWorkout: false, postProtein: '' });
+  var supplements = _sp[0]; var setSupplements = _sp[1];
+  var _so = React.useState(false);          var suppOpen    = _so[0]; var setSuppOpen    = _so[1];
 
   // Workout clock
   React.useEffect(function() {
@@ -586,6 +589,11 @@ var WorkoutLogger = function(props) {
       name:      workoutName,
       date:      new Date().toISOString(),
       duration:  duration,
+      supplements: {
+        lastMeal:    supplements.lastMeal,
+        preWorkout:  supplements.preWorkout,
+        postProtein: supplements.postProtein,
+      },
       exercises: exercises.map(function(e) {
         return {
           id:          e.id,
@@ -606,6 +614,8 @@ var WorkoutLogger = function(props) {
       setDuration(0);
       setStartTime(null);
       setWorkoutName('My Workout');
+      setSupplements({ lastMeal: '', preWorkout: false, postProtein: '' });
+      setSuppOpen(false);
     });
   };
 
@@ -671,6 +681,79 @@ var WorkoutLogger = function(props) {
             </button>
           )}
         </div>
+      </div>
+
+      {/* Supplements & Nutrition */}
+      <div style={{
+        marginBottom: 20,
+        border: '1px solid var(--border)',
+        borderRadius: 10,
+        overflow: 'hidden',
+      }}>
+        <button
+          onClick={function(){ setSuppOpen(function(o){ return !o; }); }}
+          style={{
+            width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '10px 14px', background: 'var(--surface2)',
+            border: 'none', cursor: 'pointer', color: 'var(--text)',
+          }}
+        >
+          <span style={{ fontWeight: 600, fontSize: 13 }}>
+            🥗 Supplements &amp; Nutrition
+            {(supplements.lastMeal || supplements.preWorkout || supplements.postProtein) && (
+              <span style={{
+                marginLeft: 8, fontSize: 10, fontWeight: 700,
+                background: 'var(--accent)', color: '#0f1117',
+                borderRadius: 99, padding: '2px 7px',
+              }}>logged</span>
+            )}
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{suppOpen ? '▲' : '▼'}</span>
+        </button>
+
+        {suppOpen && (
+          <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+
+            {/* Last meal */}
+            <div className=\"input-group\" style={{ margin: 0 }}>
+              <label className=\"label\">Last meal eaten and when</label>
+              <input
+                className=\"input\"
+                type=\"text\"
+                placeholder=\"e.g. Chicken + rice, 2 hours ago\"
+                value={supplements.lastMeal}
+                onChange={function(e){ setSupplements(function(s){ return Object.assign({}, s, { lastMeal: e.target.value }); }); }}
+              />
+            </div>
+
+            {/* Pre-workout */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <input
+                id=\"preworkout-check\"
+                type=\"checkbox\"
+                checked={supplements.preWorkout}
+                onChange={function(e){ setSupplements(function(s){ return Object.assign({}, s, { preWorkout: e.target.checked }); }); }}
+                style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--accent)' }}
+              />
+              <label htmlFor=\"preworkout-check\" style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+                Pre-workout taken?
+              </label>
+            </div>
+
+            {/* Post-workout protein */}
+            <div className=\"input-group\" style={{ margin: 0 }}>
+              <label className=\"label\">Post-workout protein</label>
+              <input
+                className=\"input\"
+                type=\"text\"
+                placeholder=\"e.g. 40g whey shake\"
+                value={supplements.postProtein}
+                onChange={function(e){ setSupplements(function(s){ return Object.assign({}, s, { postProtein: e.target.value }); }); }}
+              />
+            </div>
+
+          </div>
+        )}
       </div>
 
       {/* Exercise list */}
