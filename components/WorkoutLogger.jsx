@@ -715,12 +715,12 @@ var WorkoutLogger = function(props) {
           <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: 14 }}>
 
             {/* Last meal */}
-            <div className=\"input-group\" style={{ margin: 0 }}>
-              <label className=\"label\">Last meal eaten and when</label>
+            <div className="input-group" style={{ margin: 0 }}>
+              <label className="label">Last meal eaten and when</label>
               <input
-                className=\"input\"
-                type=\"text\"
-                placeholder=\"e.g. Chicken + rice, 2 hours ago\"
+                className="input"
+                type="text"
+                placeholder="e.g. Chicken + rice, 2 hours ago"
                 value={supplements.lastMeal}
                 onChange={function(e){ setSupplements(function(s){ return Object.assign({}, s, { lastMeal: e.target.value }); }); }}
               />
@@ -729,24 +729,24 @@ var WorkoutLogger = function(props) {
             {/* Pre-workout */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <input
-                id=\"preworkout-check\"
-                type=\"checkbox\"
+                id="preworkout-check"
+                type="checkbox"
                 checked={supplements.preWorkout}
                 onChange={function(e){ setSupplements(function(s){ return Object.assign({}, s, { preWorkout: e.target.checked }); }); }}
                 style={{ width: 18, height: 18, cursor: 'pointer', accentColor: 'var(--accent)' }}
               />
-              <label htmlFor=\"preworkout-check\" style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
+              <label htmlFor="preworkout-check" style={{ fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>
                 Pre-workout taken?
               </label>
             </div>
 
             {/* Post-workout protein */}
-            <div className=\"input-group\" style={{ margin: 0 }}>
-              <label className=\"label\">Post-workout protein</label>
+            <div className="input-group" style={{ margin: 0 }}>
+              <label className="label">Post-workout protein</label>
               <input
-                className=\"input\"
-                type=\"text\"
-                placeholder=\"e.g. 40g whey shake\"
+                className="input"
+                type="text"
+                placeholder="e.g. 40g whey shake"
                 value={supplements.postProtein}
                 onChange={function(e){ setSupplements(function(s){ return Object.assign({}, s, { postProtein: e.target.value }); }); }}
               />
