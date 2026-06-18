@@ -116,6 +116,7 @@ var MoreDrawer = function(props) {
   var otherProfile = activeProfile === 'John' ? 'Ariana' : 'John';
 
   var allItems = [
+    { icon: '📋', label: 'History',                       hash: '#/history',            action: 'nav',     profiles: ['John'] },
     { icon: '📚', label: 'Exercise Library',              hash: '#/exercises',          action: 'nav',     profiles: ['John'] },
     { icon: '🧘', label: 'Mobility Library',              hash: '#/mobility-exercises', action: 'nav',     profiles: ['John', 'Ariana'] },
     { icon: '👤', label: 'Switch to ' + otherProfile,    hash: null,                   action: 'profile', profiles: ['John', 'Ariana'] },
