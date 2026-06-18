@@ -59,5 +59,31 @@
         ]
       }
     ]
+  },
+  {
+    "name": "My Workout",
+    "date": "2026-06-18T19:52:06.046Z",
+    "duration": 14,
+    "supplements": {
+      "lastMeal": "mediterrainasd",
+      "preWorkout": true,
+      "postProtein": ""
+    },
+    "exercises": [
+      {
+        "id": "floor-press-dumbbell",
+        "name": "Floor Press (Dumbbell)",
+        "primaryMuscle": "Chest",
+        "supersetId": null,
+        "restSeconds": 90,
+        "sets": [
+          {
+            "weight": 124,
+            "reps": 12,
+            "type": "normal"
+          }
+        ]
+      }
+    ]
   }
 ]
