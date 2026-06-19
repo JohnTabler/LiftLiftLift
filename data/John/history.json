@@ -12,56 +12,6 @@
   },
   {
     "name": "My Workout",
-    "date": "2026-06-18T19:51:35.765Z",
-    "duration": 31,
-    "supplements": {
-      "lastMeal": "",
-      "preWorkout": false,
-      "postProtein": ""
-    },
-    "exercises": [
-      {
-        "id": "bench-press-close-grip-barbell",
-        "name": "Bench Press - Close Grip (Barbell)",
-        "primaryMuscle": "Triceps",
-        "supersetId": "ss_glmnr2",
-        "restSeconds": 90,
-        "sets": [
-          {
-            "weight": 125,
-            "reps": 12,
-            "type": "normal"
-          },
-          {
-            "weight": 125,
-            "reps": 12,
-            "type": "normal"
-          },
-          {
-            "weight": 125,
-            "reps": 12,
-            "type": "normal"
-          }
-        ]
-      },
-      {
-        "id": "decline-bench-press-barbell",
-        "name": "Decline Bench Press (Barbell)",
-        "primaryMuscle": "Chest",
-        "supersetId": "ss_glmnr2",
-        "restSeconds": 90,
-        "sets": [
-          {
-            "weight": 124,
-            "reps": 124,
-            "type": "normal"
-          }
-        ]
-      }
-    ]
-  },
-  {
-    "name": "My Workout",
     "date": "2026-06-18T19:52:06.046Z",
     "duration": 14,
     "supplements": {
