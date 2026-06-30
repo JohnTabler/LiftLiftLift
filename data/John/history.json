@@ -1,1 +1,57 @@
-[]
+[
+  {
+    "name": "My Workout",
+    "date": "2026-06-30T19:49:14.705Z",
+    "duration": 42,
+    "supplements": {
+      "lastMeal": "",
+      "preWorkout": false,
+      "postProtein": ""
+    },
+    "exercises": [
+      {
+        "id": "plank",
+        "name": "Plank",
+        "primaryMuscle": "Abdominals",
+        "supersetId": null,
+        "restSeconds": 90,
+        "sets": [
+          {
+            "weight": 195,
+            "reps": 15,
+            "type": "normal"
+          },
+          {
+            "weight": 195,
+            "reps": 15,
+            "type": "normal"
+          },
+          {
+            "weight": 195,
+            "reps": 15,
+            "type": "normal"
+          }
+        ]
+      },
+      {
+        "id": "bench-press-wide-grip-barbell",
+        "name": "Bench Press - Wide Grip (Barbell)",
+        "primaryMuscle": "Chest",
+        "supersetId": null,
+        "restSeconds": 90,
+        "sets": [
+          {
+            "weight": 110,
+            "reps": 10,
+            "type": "normal"
+          },
+          {
+            "weight": 110,
+            "reps": 10,
+            "type": "normal"
+          }
+        ]
+      }
+    ]
+  }
+]
