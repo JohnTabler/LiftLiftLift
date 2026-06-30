@@ -1,13 +1,1 @@
-[
-  {
-    "name": "My Workout",
-    "date": "2026-06-18T19:50:25.868Z",
-    "duration": 17,
-    "supplements": {
-      "lastMeal": "mediterranian at 1pm",
-      "preWorkout": false,
-      "postProtein": ""
-    },
-    "exercises": []
-  }
-]
+[]
